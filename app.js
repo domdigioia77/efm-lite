@@ -1,0 +1,674 @@
+/* ============================================================
+   EFM Lite — gare e convocazioni di Easy Football Manager dal telefono
+   - a ogni apertura: accesso Google + PIN dell'app del PC
+   - i dati arrivano da Google Drive (EFM_lite.efm, cifrato con il PIN),
+     vengono decifrati e tenuti SOLO in memoria: sul telefono non si salva nulla
+   - le gare create o modificate tornano al PC come file cifrati
+     (EFM_dal_telefono_*.efm) nella stessa cartella di Drive
+   ============================================================ */
+"use strict";
+
+const VERSIONE = "1.0";
+const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
+const SCOPE = "https://www.googleapis.com/auth/drive";
+const DRIVE = "https://www.googleapis.com/drive/v3";
+const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
+const LITE_FILE = "EFM_lite.efm";
+const TEL_PREF = "EFM_dal_telefono_";
+const MAGIC = "EFMLITE1";
+const BLOCCO_MINUTI = 5;          // in background per più di 5 minuti: si richiudono i dati
+
+/* ---------- utilità ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
+const ico = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICO[n] || ""}</svg>`;
+const GIORNI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+const GG = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
+const MESI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+const COMP = { CAMP: ["palla", "Campionato"], COPPA: ["coppa", "Coppa"], AMI: ["amichevole", "Amichevole"] };
+const REP = { POR: "Portieri", DIF: "Difensori", CEN: "Centrocampisti", TRQ: "Trequartisti", ATT: "Attaccanti", "-": "Senza ruolo" };
+const REP_ORD = ["POR", "DIF", "CEN", "TRQ", "ATT", "-"];
+const REP_LET = { POR: "P", DIF: "D", CEN: "C", TRQ: "T", ATT: "A" };
+const STATO = { Infortunato: ["inf", "inf"], Squalificato: ["sq", "sq"], Assente: ["ass", "ass"] };
+
+const pad = (n) => String(n).padStart(2, "0");
+const isoOggi = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const dataDa = (iso) => { const [y, m, d] = String(iso).split("-").map(Number); return new Date(y, m - 1, d); };
+const dataIt = (iso) => iso ? String(iso).slice(0, 10).split("-").reverse().join("/") : "";
+const giornoData = (iso) => `${GIORNI[dataDa(iso).getDay()]} ${dataIt(iso)}`;
+const giorniA = (iso) => Math.round((dataDa(iso) - dataDa(isoOggi())) / 86400000);
+/** giorni al prossimo compleanno (0 = oggi), come nell'app del PC */
+function giorniCompleanno(nascita) {
+  if (!nascita || !/^\d{4}-\d\d-\d\d/.test(nascita)) return null;
+  const oggi = dataDa(isoOggi()), [, m, d] = nascita.split("-").map(Number);
+  let p = new Date(oggi.getFullYear(), m - 1, d);
+  if (m === 2 && d === 29 && p.getMonth() !== 1) p = new Date(oggi.getFullYear(), 1, 28);
+  if (p < oggi) p = new Date(oggi.getFullYear() + 1, m - 1, d);
+  return Math.round((p - oggi) / 86400000);
+}
+const etaA = (nascita, iso) => {
+  const n = dataDa(nascita), a = dataDa(iso);
+  return a.getFullYear() - n.getFullYear() - ((a.getMonth() < n.getMonth() || (a.getMonth() === n.getMonth() && a.getDate() < n.getDate())) ? 1 : 0);
+};
+const enc = new TextEncoder(), dec = new TextDecoder();
+
+let toastT;
+function toast(msg, err = false) {
+  clearTimeout(toastT);
+  $("toast").innerHTML = `<div class="${err ? "err" : ""}">${esc(msg)}</div>`;
+  toastT = setTimeout(() => ($("toast").innerHTML = ""), err ? 6000 : 3500);
+}
+
+/* ---------- stato (solo in memoria) ---------- */
+let S = null;
+function azzera() {
+  if (S?.chiave) try { sodium.memzero(S.chiave); } catch (e) { /* già azzerata */ }
+  S = { token: null, scade: 0, lite: null, bin: null, sale: null, chiave: null, D: null, pend: {}, modello: "", errori: 0, attesa: 0, vista: null };
+}
+azzera();
+
+/* ---------- accesso Google ---------- */
+let tokenClient = null;
+class ErroreAccesso extends Error {}
+
+function attendiGoogle() {
+  return new Promise((ok, ko) => {
+    let n = 0;
+    const t = setInterval(() => {
+      if (window.google?.accounts?.oauth2) { clearInterval(t); ok(); }
+      else if (++n > 100) { clearInterval(t); ko(new Error("Non riesco a contattare Google: controlla la connessione a internet.")); }
+    }, 100);
+  });
+}
+
+async function chiediToken() {
+  await attendiGoogle();
+  return new Promise((ok, ko) => {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID, scope: SCOPE, prompt: "",
+      callback: (r) => {
+        if (r.error) return ko(new Error(r.error === "access_denied" ? "Accesso a Google Drive non consentito." : "Accesso Google non riuscito (" + r.error + ")."));
+        if (!google.accounts.oauth2.hasGrantedAllScopes(r, SCOPE)) return ko(new Error("Serve il permesso di vedere i file di Google Drive: riprova e lascia la casella spuntata."));
+        S.token = r.access_token;
+        S.scade = Date.now() + (Number(r.expires_in) || 3600) * 1000 - 60000;
+        ok();
+      },
+      error_callback: (e) => ko(new Error(e?.type === "popup_closed" ? "Accesso annullato." : e?.type === "popup_failed_to_open" ? "Il browser ha bloccato la finestra di Google: consenti i popup e riprova." : "Accesso Google non riuscito.")),
+    });
+    tokenClient.requestAccessToken();
+  });
+}
+
+async function gd(url, opt = {}) {
+  if (!S.token || Date.now() > S.scade) throw new ErroreAccesso("Accesso a Google scaduto.");
+  let r;
+  try { r = await fetch(url, { ...opt, headers: { ...(opt.headers || {}), Authorization: "Bearer " + S.token } }); }
+  catch (e) { throw new Error("Connessione a Google Drive non riuscita: controlla internet."); }
+  if (r.status === 401) { S.token = null; throw new ErroreAccesso("Accesso a Google scaduto."); }
+  if (!r.ok) {
+    let m = ""; try { m = (await r.json()).error?.message || ""; } catch (e) { /* risposta non JSON */ }
+    throw new Error(`Google Drive ha risposto con un errore (${r.status})${m ? ": " + m : ""}`);
+  }
+  return r;
+}
+const q = (s) => encodeURIComponent(s);
+const elenca = async (query, campi = "files(id,name,parents,modifiedTime,size)") =>
+  (await (await gd(`${DRIVE}/files?q=${q(query)}&fields=${q(campi)}&orderBy=modifiedTime desc&pageSize=50&spaces=drive`)).json()).files || [];
+const scarica = async (id) => new Uint8Array(await (await gd(`${DRIVE}/files/${id}?alt=media`)).arrayBuffer());
+
+async function carica(nome, cartella, bytes, idEsistente) {
+  if (idEsistente) {
+    return (await gd(`${UPLOAD}/files/${idEsistente}?uploadType=media&fields=id,name`, { method: "PATCH", headers: { "Content-Type": "application/octet-stream" }, body: bytes })).json();
+  }
+  const b = "efm" + Array.from(sodium.randombytes_buf(12), (x) => x.toString(16).padStart(2, "0")).join("");
+  const meta = { name: nome, parents: [cartella], mimeType: "application/octet-stream" };
+  const corpo = new Blob([`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: application/octet-stream\r\n\r\n`, bytes, `\r\n--${b}--`]);
+  return (await gd(`${UPLOAD}/files?uploadType=multipart&fields=id,name`, { method: "POST", headers: { "Content-Type": "multipart/related; boundary=" + b }, body: corpo })).json();
+}
+
+/* ---------- cifratura (come il PC: Argon2id + XSalsa20-Poly1305) ---------- */
+function apriFile(bin, chiave) {
+  if (dec.decode(bin.slice(0, 8)) !== MAGIC) return null;
+  const sb = sodium.crypto_pwhash_SALTBYTES, nb = sodium.crypto_secretbox_NONCEBYTES;
+  try { return dec.decode(sodium.crypto_secretbox_open_easy(bin.slice(8 + sb + nb), bin.slice(8 + sb, 8 + sb + nb), chiave)); }
+  catch (e) { return null; }
+}
+function chiudiFile(testo) {
+  const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+  const box = sodium.crypto_secretbox_easy(enc.encode(testo), nonce, S.chiave);
+  const out = new Uint8Array(8 + S.sale.length + nonce.length + box.length);
+  out.set(enc.encode(MAGIC), 0); out.set(S.sale, 8); out.set(nonce, 8 + S.sale.length); out.set(box, 8 + S.sale.length + nonce.length);
+  return out;
+}
+const stessoSale = (bin) => S.sale && bin.length > 24 && sodium.memcmp(bin.slice(8, 8 + S.sale.length), S.sale);
+
+async function modelloTelefono() {
+  try {
+    if (navigator.userAgentData?.getHighEntropyValues) {
+      const v = await navigator.userAgentData.getHighEntropyValues(["model", "platform"]);
+      if (v.model) return v.model;
+    }
+  } catch (e) { /* non disponibile */ }
+  const m = navigator.userAgent.match(/Android [^;)]+; ([^;)]+)/);
+  return m && m[1] !== "K" ? m[1].trim() : /iPhone/.test(navigator.userAgent) ? "iPhone" : "telefono";
+}
+
+/* ============================================================
+   SCHERMATE
+   ============================================================ */
+const app = () => $("app");
+const icona = `<img class="icona" src="icone/icona-192.png" alt="">`;
+
+function schermataAccesso(errore = "") {
+  S.vista = "accesso";
+  app().innerHTML = `<section class="accesso">
+    ${icona}
+    <h1>EFM <em>Lite</em></h1>
+    <p>Gare e convocazioni di Easy Football Manager. Ogni volta: accesso Google e PIN dell'app del PC. Sul telefono non resta salvato nulla.</p>
+    ${errore ? `<div class="err" role="alert">${esc(errore)}</div>` : ""}
+    <button class="btn pri lg" id="bAccedi">${ico("sblocca")} Accedi con Google</button>
+    <span class="ver">EFM Lite ${VERSIONE}</span>
+  </section>`;
+  $("bAccedi").onclick = accedi;
+}
+
+function attesa(testo) {
+  app().innerHTML = `<section class="accesso">${icona}<h1>EFM <em>Lite</em></h1><div class="attesa"><span class="giro"></span>${esc(testo)}</div></section>`;
+}
+
+async function accedi() {
+  try {
+    if (!window.sodium) throw new Error("Componente di cifratura non caricato: ricarica la pagina.");
+    await sodium.ready;
+    await chiediToken();
+    attesa("Cerco i dati su Google Drive…");
+    const f = await elenca(`name = '${LITE_FILE}' and trashed = false`);
+    if (!f.length) throw new Error(`Su Google Drive non trovo ${LITE_FILE}. Sul PC: Impostazioni > Google Drive > Telefono, attiva "Dati per il telefono" e aspetta che Drive sincronizzi.`);
+    S.lite = f[0];
+    if (!S.lite.parents?.length) throw new Error("Non riesco a capire in quale cartella di Drive si trova " + LITE_FILE + ".");
+    attesa("Scarico i dati…");
+    S.bin = await scarica(S.lite.id);
+    if (dec.decode(S.bin.slice(0, 8)) !== MAGIC) throw new Error(LITE_FILE + " non è un file di EFM Lite (o è incompleto).");
+    S.sale = S.bin.slice(8, 8 + sodium.crypto_pwhash_SALTBYTES);
+    S.modello = await modelloTelefono();
+    schermataPin();
+  } catch (e) {
+    schermataAccesso(e.message);
+  }
+}
+
+function schermataPin(err = "") {
+  S.vista = "pin";
+  let pin = "";
+  app().innerHTML = `<section class="accesso">
+    ${icona}
+    <h1>PIN</h1>
+    <p>Inserisci il PIN dell'app del PC</p>
+    <div class="pallini" id="pall" aria-label="cifre inserite"></div>
+    <div class="err" id="pinErr" role="alert" ${err ? "" : "hidden"}>${esc(err)}</div>
+    <div class="tastiera" id="tast">
+      ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-n="${n}">${n}</button>`).join("")}
+      <button class="az" data-a="canc" aria-label="Cancella">${ico("canc")}</button><button data-n="0">0</button>
+      <button class="ok" data-a="ok" aria-label="Conferma">${ico("fatto")}</button>
+    </div>
+    <span class="ver">${esc(S.modello)} · EFM Lite ${VERSIONE}</span>
+  </section>`;
+  const disegna = () => {
+    $("pall").innerHTML = Array.from({ length: Math.max(4, pin.length) }, (_, i) => `<i class="${i < pin.length ? "on" : ""}"></i>`).join("");
+    $("tast").querySelector("[data-a=ok]").disabled = pin.length < 4;
+  };
+  const conferma = async () => {
+    if (pin.length < 4) return;
+    const attendi = Math.ceil((S.attesa - Date.now()) / 1000);
+    if (attendi > 0) { mostraErr(`Troppi tentativi: riprova tra ${attendi} secondi.`); return; }
+    $("tast").querySelectorAll("button").forEach((b) => (b.disabled = true));
+    $("pinErr").hidden = false; $("pinErr").className = "attesa"; $("pinErr").innerHTML = `<span class="giro"></span>Apro i dati…`;
+    await new Promise((r) => setTimeout(r, 30));   // lascia disegnare la rotellina: il calcolo della chiave dura un attimo
+    const k = sodium.crypto_pwhash(sodium.crypto_secretbox_KEYBYTES, pin, S.sale, sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+      sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE, sodium.crypto_pwhash_ALG_ARGON2ID13);
+    pin = "";
+    const testo = apriFile(S.bin, k);
+    if (testo === null) {
+      sodium.memzero(k);
+      S.errori++;
+      if (S.errori >= 5) S.attesa = Date.now() + Math.min(900, 30 * 2 ** (S.errori - 5)) * 1000;
+      $("tast").querySelectorAll("button").forEach((b) => (b.disabled = false));
+      mostraErr("PIN errato.");
+      disegna();
+      $("pall").classList.remove("scuoti"); void $("pall").offsetWidth; $("pall").classList.add("scuoti");
+      return;
+    }
+    S.chiave = k; S.errori = 0; S.bin = null;
+    try {
+      S.D = JSON.parse(testo);
+    } catch (e) { schermataAccesso("I dati scaricati non sono leggibili."); return; }
+    await caricaInAttesa();
+    vaiHome();
+  };
+  const mostraErr = (m) => { const e = $("pinErr"); e.className = "err"; e.textContent = m; e.hidden = false; };
+  $("tast").onclick = (e) => {
+    const b = e.target.closest("button");
+    if (!b || b.disabled) return;
+    if (b.dataset.n && pin.length < 8) pin += b.dataset.n;
+    else if (b.dataset.a === "canc") pin = pin.slice(0, -1);
+    else if (b.dataset.a === "ok") return conferma();
+    disegna();
+  };
+  document.onkeydown = (e) => {
+    if (S.vista !== "pin") return;
+    if (/^\d$/.test(e.key) && pin.length < 8) { pin += e.key; disegna(); }
+    else if (e.key === "Backspace") { pin = pin.slice(0, -1); disegna(); }
+    else if (e.key === "Enter") conferma();
+  };
+  disegna();
+}
+
+/** Le gare salvate dal telefono e non ancora prese dal PC: si vedono come le ha lasciate il telefono. */
+async function caricaInAttesa() {
+  S.pend = {};
+  try {
+    const f = await elenca(`'${S.lite.parents[0]}' in parents and name contains '${TEL_PREF}' and trashed = false`);
+    for (const x of f) {
+      if (S.pend[x.name]) continue;   // il più recente vince (elenco ordinato per data)
+      const bin = await scarica(x.id);
+      if (!stessoSale(bin)) continue; // fatto con il PIN di prima: lo legge solo il PC
+      const t = apriFile(bin, S.chiave);
+      if (t) S.pend[x.name] = { id: x.id, p: JSON.parse(t) };
+    }
+  } catch (e) {
+    if (e instanceof ErroreAccesso) throw e;
+    toast("Non riesco a leggere le modifiche già inviate dal telefono: " + e.message, true);
+  }
+}
+
+/* ---------- dati: gare con le modifiche in attesa sopra ---------- */
+function gare() {
+  const L = S.D.gare.map((g) => ({ ...g, orig: g }));
+  for (const [nome, { p }] of Object.entries(S.pend)) {
+    const g = { ...p.gara, orig: p.originale || null, uid: p.uid || null, file: nome, attesa: true };
+    const i = g.id ? L.findIndex((x) => x.id === g.id) : -1;
+    if (i >= 0) L[i] = g; else L.push(g);
+  }
+  return L.sort((a, b) => (a.data + (a.ora_inizio || "")).localeCompare(b.data + (b.ora_inizio || "")));
+}
+const persona = (id) => S.D.persone.find((p) => p.id === id);
+const nomeFile = (g) => TEL_PREF + (g.id ? "g" + g.id : "n" + g.uid) + ".efm";
+
+/* ---------- testata ---------- */
+function testata(titolo, sotto, sinistra = "", destra = "") {
+  return `<header class="testata">${sinistra || `<span class="logo">${S.D.logo ? `<img src="${esc(S.D.logo)}" alt="">` : ico("palla")}</span>`}
+    <div class="tit"><h1>${esc(titolo)}</h1><small>${esc(sotto)}</small></div>${destra}</header>`;
+}
+
+/* ============================================================
+   HOME: compleanni e gare
+   ============================================================ */
+function vaiHome() {
+  S.vista = "home";
+  document.onkeydown = null;
+  const D = S.D, oggi = isoOggi();
+  const cmp = D.persone.map((p) => ({ p, g: giorniCompleanno(p.nascita) })).filter((x) => x.g !== null && x.g <= 7)
+    .sort((a, b) => a.g - b.g || a.p.cognome.localeCompare(b.p.cognome));
+  const rigaCmp = ({ p, g }) => {
+    const anni = etaA(p.nascita, oggi) + (g === 0 ? 0 : 1);
+    const quando = g === 0 ? "Oggi!" : g === 1 ? "Domani" : `${GG[(dataDa(oggi).getDay() + g) % 7]} ${dataIt(p.nascita).slice(0, 5)}`;
+    return `<div class="cmp ${g === 0 ? "oggi" : ""}">
+      ${g === 0 ? `<span class="torta" aria-hidden="true">🎂</span>` : p.app === "STAFF" ? `<span class="bd staff">${ico("staff")}</span>` : badgeRep(p)}
+      <div class="chi"><b>${esc(p.cognome)} ${esc(p.nome)}</b><small>${g === 0 ? "compie" : "compirà"} ${anni} anni${p.app === "STAFF" ? " · staff" + (p.categoria ? " (" + esc(p.categoria) + ")" : "") : ""}</small></div>
+      <span class="quando">${quando}</span></div>`;
+  };
+  const L = gare();
+  const future = L.filter((g) => g.data >= oggi), passate = L.filter((g) => g.data < oggi).reverse();
+  const card = (g) => {
+    const d = dataDa(g.data), n = (g.convocati || []).length, tra = giorniA(g.data);
+    return `<button class="gara" data-g="${esc(g.file || "id" + g.id)}">
+      <span class="gg"><small>${GG[d.getDay()]}</small><b>${d.getDate()}</b><em>${MESI[d.getMonth()]}</em></span>
+      <span class="info"><b>${esc(g.avversario || "Avversario da definire")}</b>
+        <span>${ico(g.casa_trasferta === "T" ? "trasferta" : "casa")}${g.casa_trasferta === "T" ? "Trasferta" : g.casa_trasferta === "C" ? "Casa" : "–"} · ${esc(COMP[g.competizione]?.[1] || "")}${g.ora_inizio ? " · ore " + esc(g.ora_inizio) : ""}</span>
+        <span>${g.attesa ? `<span class="etc att">${ico("orologio")}In attesa del PC</span>` : ""}${tra === 0 ? `<span class="etc">Oggi</span>` : tra === 1 ? `<span class="etc">Domani</span>` : ""}</span></span>
+      <span class="dx"><span class="bd ${n ? "" : "mute"}" style="${n ? "background:var(--accent)" : ""}">${n}</span><small>conv.</small></span>
+    </button>`;
+  };
+  app().innerHTML = testata(D.stagione.squadra, "Stagione " + D.stagione.nome, "", `<button class="ib" id="bEsci" aria-label="Chiudi e blocca">${ico("lucchetto")}</button>`) + `
+    <section class="pag">
+      ${cmp.length ? `<h2 class="sez">${ico("torta")} Compleanni <span class="n">prossimi 7 giorni</span></h2><div class="card">${cmp.map(rigaCmp).join("")}</div>` : ""}
+      <h2 class="sez">${ico("calendario")} Gare in programma <span class="sp"></span><span class="n">${future.length}</span></h2>
+      ${future.length ? future.map(card).join("") : `<div class="vuoto">Nessuna gara in programma.<br>Creane una con <b>Nuova gara</b>.</div>`}
+      ${passate.length ? `<h2 class="sez">${ico("orologio")} Ultimi 7 giorni</h2>${passate.map(card).join("")}` : ""}
+      ${D.stagione.archiviata ? `<p class="avviso">${ico("avviso")}<span>La stagione è archiviata sul PC: le modifiche non verranno applicate.</span></p>` : ""}
+      <p class="piede">Dati dal PC ${esc(D.pc)} del ${esc(dataIt(D.creato))} ${esc(String(D.creato || "").slice(11, 16))}<br>${esc(S.modello)} · EFM Lite ${VERSIONE}</p>
+    </section>
+    <nav class="barra"><button class="btn pri" id="bNuova">${ico("piu")} Nuova gara</button></nav>`;
+  $("bEsci").onclick = () => { azzera(); schermataAccesso(); };
+  $("bNuova").onclick = () => apriGara(null);
+  app().querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => {
+    const k = b.dataset.g, g = L.find((x) => (x.file || "id" + x.id) === k);
+    if (g) apriGara(g);
+  }));
+  window.scrollTo(0, 0);
+}
+
+function badgeRep(p, sm = "") {
+  return REP_LET[p.reparto] ? `<span class="bd ${sm} ${p.reparto}" title="${esc(p.ruolo || REP[p.reparto])}">${REP_LET[p.reparto]}</span>` : `<span class="bd ${sm} mute">–</span>`;
+}
+
+/* ============================================================
+   GARA: dati e convocati
+   ============================================================ */
+function apriGara(g) {
+  S.vista = "gara";
+  const nuova = !g;
+  const E = g ? JSON.parse(JSON.stringify({ ...g, orig: undefined })) : {
+    id: null, uid: crypto.randomUUID(), data: "", avversario: "", campo: "", ora_presentazione: "", ora_inizio: "",
+    casa_trasferta: "C", competizione: "CAMP", convocati: [],
+  };
+  delete E.orig;
+  const orig = g ? (g.orig ? JSON.parse(JSON.stringify(g.orig)) : null) : null;
+  let tab = "dati", salvata = !nuova, filtro = "";
+  const conv = new Map((E.convocati || []).map((c) => [c.id, c]));
+
+  const convocabili = () => S.D.persone.filter((p) => p.app !== "STAFF" || conv.has(p.id))
+    .sort((a, b) => REP_ORD.indexOf(a.reparto) - REP_ORD.indexOf(b.reparto) || (a.cognome + a.nome).localeCompare(b.cognome + b.nome));
+  const leggiForm = () => {
+    const f = $("fGara");
+    if (!f) return;
+    for (const k of ["data", "ora_presentazione", "ora_inizio", "avversario", "campo"]) E[k] = f[k].value.trim();
+  };
+  const titolo = () => nuova && !E.data ? "Nuova gara" : E.data ? `${GIORNI[dataDa(E.data).getDay()]} ${dataIt(E.data)}` : "Gara";
+
+  const disegna = () => {
+    leggiForm();
+    const L = convocabili(), n = conv.size;
+    app().innerHTML = testata(titolo(), E.avversario ? (E.casa_trasferta === "T" ? "in trasferta · " : "in casa · ") + E.avversario : (nuova ? "da salvare su Drive" : ""),
+      `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+    <section class="pag">
+      <div class="tabs"><div class="seg" role="tablist">
+        <button data-t="dati" class="${tab === "dati" ? "on" : ""}" role="tab">${ico("calendario")} Gara</button>
+        <button data-t="conv" class="${tab === "conv" ? "on" : ""}" role="tab">${ico("persone")} Convocati (${n})</button>
+      </div></div>
+      ${g?.attesa ? `<p class="avviso">${ico("orologio")}<span>Modifica già inviata dal telefono: il PC la applicherà quando apri l'app (se nel frattempo la gara è cambiata anche sul PC, ti chiederà quale versione tenere).</span></p>` : ""}
+      ${tab === "dati" ? `
+      <form id="fGara" autocomplete="off" onsubmit="return false">
+        <label class="campo"><span>Data</span><input type="date" name="data" value="${esc(E.data)}" required></label>
+        <div class="due">
+          <label class="campo"><span>Ora presentazione</span><input type="time" name="ora_presentazione" value="${esc(E.ora_presentazione)}"></label>
+          <label class="campo"><span>Ora inizio gara</span><input type="time" name="ora_inizio" value="${esc(E.ora_inizio)}"></label>
+        </div>
+        <label class="campo"><span>Avversario</span><input name="avversario" list="lAvv" value="${esc(E.avversario)}" autocapitalize="characters"></label>
+        <label class="campo"><span>Campo (luogo)</span><input name="campo" list="lCampi" value="${esc(E.campo)}"></label>
+        <div class="campo"><span>Si gioca</span><div class="seg" id="sCT">
+          <button type="button" data-v="C" class="${E.casa_trasferta !== "T" ? "on" : ""}">${ico("casa")} In casa</button>
+          <button type="button" data-v="T" class="${E.casa_trasferta === "T" ? "on" : ""}">${ico("trasferta")} In trasferta</button></div></div>
+        <div class="campo"><span>Competizione</span><div class="seg" id="sComp">
+          ${Object.entries(COMP).map(([k, [ic, nome]]) => `<button type="button" data-v="${k}" class="${E.competizione === k ? "on" : ""}">${ico(ic)} ${nome}</button>`).join("")}</div></div>
+        <datalist id="lAvv">${S.D.avversari.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+        <datalist id="lCampi">${S.D.campi.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+      </form>` : `
+      <div class="riep" id="riep"><span>${riep()}</span><span class="sp"></span>
+        ${n ? `<button class="btn" id="bNessuno" style="min-height:40px">Togli tutti</button>` : ""}</div>
+      <label class="campo cerca"><input type="search" id="cerca" placeholder="Cerca per cognome…" value="${esc(filtro)}"></label>
+      <div id="elenco">${elenco(L)}</div>`}
+    </section>
+    <nav class="barra">
+      <button class="btn" id="bReport">${ico("report")} Report</button>
+      <button class="btn pri" id="bSalva">${ico("nuvola")} Salva</button>
+    </nav>`;
+    $("bInd").onclick = esci;
+    app().querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { leggiForm(); tab = b.dataset.t; disegna(); window.scrollTo(0, 0); }));
+    if (tab === "dati") {
+      $("sCT").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; E.casa_trasferta = b.dataset.v; salvata = false; disegna(); };
+      $("sComp").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; E.competizione = b.dataset.v; salvata = false; disegna(); };
+      $("fGara").oninput = () => { salvata = false; };
+    } else {
+      $("cerca").oninput = (e) => { filtro = e.target.value; $("elenco").innerHTML = elenco(convocabili()); };
+      if ($("bNessuno")) $("bNessuno").onclick = () => { if (confirm("Togliere tutti i convocati?")) { conv.clear(); salvata = false; disegna(); } };
+      $("elenco").onclick = (e) => {
+        const r = e.target.closest("[data-p]");
+        if (!r) return;
+        const id = +r.dataset.p;
+        if (conv.has(id)) conv.delete(id); else conv.set(id, { id, n: null, c: 0, v: 0 });
+        salvata = false;
+        r.classList.toggle("on", conv.has(id));
+        r.setAttribute("aria-pressed", conv.has(id));
+        $("riep").firstElementChild.outerHTML = `<span>${riep()}</span>`;
+        app().querySelector("[data-t=conv]").innerHTML = `${ico("persone")} Convocati (${conv.size})`;
+      };
+    }
+    $("bSalva").onclick = salva;
+    $("bReport").onclick = () => { leggiForm(); E.convocati = [...conv.values()]; if (!E.data) { toast("Indica prima la data della gara.", true); tab = "dati"; disegna(); return; } report(E, salvata, () => apriGaraDi(E)); };
+  };
+
+  const riep = () => {
+    const eta = [...conv.keys()].map(persona).filter((p) => p?.nascita && E.data).map((p) => etaA(p.nascita, E.data));
+    return `<b>${conv.size}</b> convocati${eta.length ? ` · età media <b>${(eta.reduce((a, b) => a + b, 0) / eta.length).toFixed(1).replace(".", ",")}</b>` : ""}`;
+  };
+  const elenco = (L) => {
+    const f = filtro.trim().toUpperCase();
+    const vis = f ? L.filter((p) => (p.cognome + " " + p.nome).toUpperCase().includes(f)) : L;
+    if (!vis.length) return `<div class="vuoto">Nessun giocatore${f ? " trovato" : " in rosa"}.</div>`;
+    let out = "", rep = null, gruppo = [];
+    const chiudi = () => { if (gruppo.length) out += `<div class="rep"><span>${REP[rep] || rep}</span><span>${gruppo.length}</span></div><div class="lista">${gruppo.join("")}</div>`; gruppo = []; };
+    for (const p of vis) {
+      const rp = p.app === "STAFF" ? "-" : p.reparto;
+      if (rp !== rep) { chiudi(); rep = rp; }
+      const on = conv.has(p.id), st = STATO[p.stato];
+      gruppo.push(`<button class="riga ${on ? "on" : ""} ${st ? "no" : ""}" data-p="${p.id}" aria-pressed="${on}">
+        <span class="sel">${ico("fatto")}</span>${badgeRep(p, "sm")}
+        <span class="nome"><b>${esc(p.cognome)}</b> ${esc(p.nome)}<small>${esc(p.ruolo || "")}${p.nascita ? " · " + p.nascita.slice(0, 4) : ""}${p.app === "FUORI_ROSA" ? " · fuori rosa" : ""}</small></span>
+        <span class="ext">${st ? `<span class="bd sm ${st[0]}" title="${esc(p.stato)}">${ico(st[1])}</span>` : ""}</span></button>`);
+    }
+    chiudi();
+    return out;
+  };
+
+  const esci = () => {
+    leggiForm();
+    if (!salvata && !confirm("Le modifiche non sono state salvate su Drive. Uscire lo stesso?")) return;
+    vaiHome();
+  };
+
+  const salva = async () => {
+    leggiForm();
+    E.convocati = [...conv.values()].sort((a, b) => a.id - b.id);
+    if (!E.data) { toast("La data della gara è obbligatoria.", true); tab = "dati"; disegna(); return; }
+    if (E.ora_presentazione && E.ora_inizio && E.ora_presentazione > E.ora_inizio) { toast("L'ora di presentazione deve essere prima dell'inizio gara.", true); tab = "dati"; disegna(); return; }
+    const b = $("bSalva");
+    b.disabled = true; b.innerHTML = `<span class="giro"></span> Salvo…`;
+    try {
+      const nome = nomeFile(E);
+      const p = {
+        v: 1, tipo: "gara", telefono: S.modello, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
+        uid: E.id ? null : E.uid,
+        gara: { id: E.id || null, data: E.data, avversario: E.avversario, campo: E.campo, ora_presentazione: E.ora_presentazione, ora_inizio: E.ora_inizio,
+                casa_trasferta: E.casa_trasferta, competizione: E.competizione, convocati: E.convocati },
+        originale: orig,
+      };
+      const prima = S.pend[nome];
+      const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), prima?.id);
+      S.pend[nome] = { id: r.id || prima?.id, p };
+      salvata = true;
+      g = { ...p.gara, attesa: true, file: nome };
+      toast("Salvata su Google Drive: il PC la prenderà all'apertura dell'app.");
+      disegna();
+    } catch (e) {
+      if (e instanceof ErroreAccesso) { await riaccedi(); b.disabled = false; b.innerHTML = `${ico("nuvola")} Salva`; return; }
+      toast(e.message, true);
+      b.disabled = false; b.innerHTML = `${ico("nuvola")} Salva`;
+    }
+  };
+
+  // dal report si torna alla stessa scheda (con le modifiche fatte)
+  const apriGaraDi = () => { S.vista = "gara"; disegna(); };
+  disegna();
+  window.scrollTo(0, 0);
+}
+
+/** Accesso Google scaduto (dura un'ora): si rinnova senza perdere quello che c'è in memoria. */
+async function riaccedi() {
+  toast("L'accesso a Google è scaduto: accedi di nuovo e poi ripeti l'operazione.", true);
+  try { await chiediToken(); toast("Accesso rinnovato: ripeti l'operazione."); }
+  catch (e) { toast(e.message, true); }
+}
+
+/* ============================================================
+   REPORT: "Lista convocati" come nell'app del PC, in immagine
+   ============================================================ */
+async function report(E, salvata, torna) {
+  S.vista = "report";
+  app().innerHTML = testata("Report convocati", giornoData(E.data), `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) +
+    `<section class="pag"><div class="attesa" style="justify-content:center;padding:40px;color:var(--muted)"><span class="giro"></span>Preparo l'immagine…</div></section>`;
+  $("bInd").onclick = torna;
+  let blob;
+  try { blob = await disegnaReport(E); } catch (e) { toast("Non riesco a preparare l'immagine: " + e.message, true); torna(); return; }
+  const url = URL.createObjectURL(blob);
+  const nome = `Convocati_${E.data}_${(E.avversario || "gara").replace(/[^A-Za-z0-9]+/g, "_")}.png`;
+  const file = new File([blob], nome, { type: "image/png" });
+  const puoi = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+  app().querySelector(".pag").innerHTML = `
+    ${salvata ? "" : `<p class="avviso">${ico("avviso")}<span>Questa versione della gara <b>non è ancora salvata</b> su Drive: torna indietro e premi Salva perché arrivi anche al PC.</span></p>`}
+    <div class="anteprima"><img src="${url}" alt="Lista convocati"></div>
+    <p class="nota">Con <b>Condividi</b> scegli WhatsApp e poi la chat o il gruppo della squadra.</p>`;
+  const barra = document.createElement("nav");
+  barra.className = "barra";
+  barra.innerHTML = `<a class="btn" id="bScarica" href="${url}" download="${esc(nome)}">${ico("scarica")} Scarica</a>
+    ${puoi ? `<button class="btn pri" id="bCond">${ico("condividi")} Condividi</button>` : ""}`;
+  app().appendChild(barra);
+  $("bInd").onclick = () => { URL.revokeObjectURL(url); torna(); };
+  if (puoi) $("bCond").onclick = async () => {
+    try { await navigator.share({ files: [file], title: "Lista convocati" }); }
+    catch (e) { if (e.name !== "AbortError") toast("Condivisione non riuscita: usa Scarica e invia l'immagine da WhatsApp.", true); }
+  };
+  window.scrollTo(0, 0);
+}
+
+function caricaImg(src) {
+  return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
+}
+
+/**
+ * Disegna la pagina A4 come stampa.php del PC (tipo "convocati").
+ * Misure in millimetri e punti tipografici, convertite a 150 dpi (×1,5 per la nitidezza).
+ */
+async function disegnaReport(E) {
+  const D = S.D, K = 1.5;
+  const MM = 150 / 25.4 * K, PT = 150 / 72 * K, PX = 150 / 96 * K;
+  const W = Math.round(210 * MM), M = 16 * MM, larg = W - 2 * M;
+  const FONT = 'Roboto, "Segoe UI", Arial, sans-serif';
+  const conv = (E.convocati || []).map((c) => persona(c.id)).filter(Boolean)
+    .sort((a, b) => ((a.cognome + a.nome) < (b.cognome + b.nome) ? -1 : (a.cognome + a.nome) > (b.cognome + b.nome) ? 1 : 0));
+  const eta = conv.filter((p) => p.nascita).map((p) => etaA(p.nascita, E.data));
+  const etaMedia = eta.length ? (eta.reduce((a, b) => a + b, 0) / eta.length).toFixed(1).replace(".", ",") : "–";
+  const comp = COMP[E.competizione]?.[1] || "";
+  const casa = { C: "in casa", T: "in trasferta" }[E.casa_trasferta] || "";
+  const casaTxt = comp ? comp + (casa ? ", " + casa : "") : casa;
+  const logo = D.logo ? await caricaImg(D.logo) : null;
+  await document.fonts?.ready;
+
+  const rigaH = (11.5 * PT * 1.35) + 10 * PX + 1;
+  const altezzaInfo = 4 * (11 * PT * 1.35) + 3 * 5 * PX;
+  const contenuto = M + 22 * MM + 20 * PX + 14 * PX + altezzaInfo + 16 * PX + (9.5 * PT * 1.35 + 8 * PX) + conv.length * rigaH + 26 * PX + 40 * PX + M;
+  const H = Math.max(Math.round(297 * MM), Math.ceil(contenuto));
+
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const c = cv.getContext("2d");
+  c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+  c.textBaseline = "alphabetic";
+  const font = (pt, peso = 400) => (c.font = `${peso} ${pt * PT}px ${FONT}`);
+  const testo = (t, x, y, max) => {
+    t = String(t ?? "");
+    if (max && c.measureText(t).width > max) { while (t.length > 1 && c.measureText(t + "…").width > max) t = t.slice(0, -1); t += "…"; }
+    c.fillText(t, x, y); return c.measureText(t).width;
+  };
+  const spaziato = (t, x, y, sp) => { for (const ch of t) { c.fillText(ch, x, y); x += c.measureText(ch).width + sp; } return x; };
+
+  // intestazione: logo, squadra · stagione, titolo, riga nera
+  let y = M;
+  const hLogo = 22 * MM;
+  let xt = M;
+  if (logo) {
+    const r = Math.min(hLogo / logo.width, hLogo / logo.height), lw = logo.width * r, lh = logo.height * r;
+    c.drawImage(logo, M + (hLogo - lw) / 2, y + (hLogo - lh) / 2, lw, lh);
+    xt = M + hLogo + 16 * PX;
+  }
+  c.fillStyle = "#444"; font(10);
+  const blocco = 10 * PT * 1.35 + 2 * PX + 24 * PT * 1.15;
+  let yt = y + (hLogo - blocco) / 2 + 10 * PT;
+  spaziato(`${D.stagione.squadra} · Stagione ${D.stagione.nome}`.toUpperCase(), xt, yt, 0.5 * PX);
+  c.fillStyle = "#111"; font(24, 700);
+  yt += 2 * PX + 24 * PT * 1.05;
+  spaziato("LISTA CONVOCATI", xt, yt, 0.5 * PX);
+  y += hLogo + 10 * PX;
+  c.fillRect(M, y, larg, 2 * PX);
+  y += 2 * PX + 14 * PX;
+
+  // righe di informazioni
+  const lh = 11 * PT * 1.35, il = 34 * MM;
+  const riga = (parti) => {
+    let x = M;
+    y += lh * 0.78;
+    for (const [tipo, t] of parti) {
+      if (tipo === "l") { font(11); c.fillStyle = "#555"; testo(t, x, y); x += il; }
+      else if (tipo === "l2") { font(11); c.fillStyle = "#555"; x += 6 * MM; x += testo(t, x, y) + 2 * MM; }
+      else if (tipo === "b") { font(11, 700); c.fillStyle = "#111"; x += testo(t, x, y, M + larg - x); }
+      else if (tipo === "n") { font(11); c.fillStyle = "#111"; x += testo(t, x, y, M + larg - x); }
+    }
+    y += lh * 0.22 + 5 * PX;
+  };
+  riga([["l", "Data:"], ["b", giornoData(E.data)], ["l2", "Ora Presentazione:"], ["b", E.ora_presentazione || "–"], ["l2", "Ora Inizio Gara:"], ["b", E.ora_inizio || "–"]]);
+  riga([["l", "Gara:"], ["b", (E.avversario || "–") + " "], ["n", casaTxt ? `(${casaTxt})` : ""]]);
+  riga([["l", "Luogo:"], ["b", E.campo || "–"]]);
+  riga([["l", "Totale Convocati:"], ["b", String(conv.length)], ["l2", "Età Media:"], ["b", etaMedia]]);
+  y += 16 * PX - 5 * PX;
+
+  // tabella: # | Giocatore | Ruolo | Anno
+  const cN = 14 * MM, cR = 48 * MM, cA = 22 * MM, cG = larg - cN - cR - cA;
+  const xN = M, xG = M + cN, xR = xG + cG, xA = xR + cR, p6 = 6 * PX;
+  font(9.5); c.fillStyle = "#444";
+  const thH = 9.5 * PT * 1.35 + 8 * PX;
+  const yth = y + 4 * PX + 9.5 * PT;
+  const centro = (t, x, w, yy) => c.fillText(t, x + (w - c.measureText(t).width) / 2, yy);
+  font(9.5, 700);
+  centro("#", xN, cN, yth);
+  spaziato("GIOCATORE", xG + p6, yth, 0.4 * PX);
+  spaziato("RUOLO", xR + p6, yth, 0.4 * PX);
+  const wa = [..."ANNO"].reduce((s, ch) => s + c.measureText(ch).width + 0.4 * PX, 0);
+  spaziato("ANNO", xA + (cA - wa) / 2, yth, 0.4 * PX);
+  y += thH;
+  c.fillStyle = "#111"; c.fillRect(M, y, larg, 1.5 * PX);
+  y += 1.5 * PX;
+  conv.forEach((p, i) => {
+    const yb = y + 5 * PX + 11.5 * PT;
+    c.fillStyle = "#111";
+    font(11.5, 700); centro(String(i + 1), xN, cN, yb);
+    const wc = testo(p.cognome, xG + p6, yb, cG - 2 * p6);
+    font(11.5); testo(" " + (p.nome || ""), xG + p6 + wc, yb, Math.max(0, cG - 2 * p6 - wc));
+    testo(p.ruolo || "", xR + p6, yb, cR - 2 * p6);
+    if (p.nascita) centro(p.nascita.slice(0, 4), xA, cA, yb);
+    y += rigaH;
+    c.fillStyle = "#ddd"; c.fillRect(M, y - 1 * PX, larg, 1 * PX);
+  });
+
+  // firma
+  y += 26 * PX;
+  const wf = 60 * MM, xf = M + larg - wf;
+  c.fillStyle = "#555"; c.fillRect(xf, y, wf, 1 * PX);
+  font(10); c.fillStyle = "#444";
+  centro("L'allenatore", xf, wf, y + 4 * PX + 10 * PT);
+
+  return new Promise((ok, ko) => cv.toBlob((b) => (b ? ok(b) : ko(new Error("immagine vuota"))), "image/png"));
+}
+
+/* ---------- sicurezza: dati richiusi dopo qualche minuto in background ---------- */
+let nascostaDal = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { nascostaDal = Date.now(); return; }
+  if (S.D && nascostaDal && Date.now() - nascostaDal > BLOCCO_MINUTI * 60000) {
+    azzera();
+    schermataAccesso("Per sicurezza i dati sono stati richiusi: accedi di nuovo.");
+  }
+});
+window.addEventListener("pagehide", () => azzera());
+
+schermataAccesso();

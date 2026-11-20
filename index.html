@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client; connect-src 'self' https://www.googleapis.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob:; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#174A2C">
+<meta name="description" content="EFM Lite: gare e convocazioni di Easy Football Manager dal telefono">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icone/icona-192.png">
+<link rel="apple-touch-icon" href="icone/icona-192.png">
+<link rel="stylesheet" href="stile.css">
+<title>EFM Lite</title>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<div id="toast" role="status"></div>
+<noscript><p style="padding:24px">Per usare EFM Lite serve JavaScript attivo.</p></noscript>
+<script src="lib/libsodium-sumo.js"></script>
+<script src="lib/libsodium-wrappers.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script src="app.js"></script>
+</body>
+</html>
