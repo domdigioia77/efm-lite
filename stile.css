@@ -210,3 +210,8 @@ h2.sez .n{font:600 14px Barlow;color:var(--muted);text-transform:none;letter-spa
 .interr input:checked + .sw{background:var(--accent)}
 .interr input:checked + .sw::after{left:21px}
 .interr input:focus-visible + .sw{outline:3px solid var(--giallo);outline-offset:2px}
+.gc.fut{background:transparent;color:var(--line);cursor:not-allowed}
+.gc.fut.gara::after{opacity:.4}
+.gc.da{outline:3px dashed var(--accent);outline-offset:-3px}
+.leg .l.fut{background:transparent;border:1.5px dashed var(--line)}
+.avviso span svg.i{width:15px;height:15px;vertical-align:-2px;margin:0}

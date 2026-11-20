@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.1";
+const VERSIONE = "1.2";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -21,7 +21,7 @@ const BLOCCO_MINUTI = 5;          // in background per più di 5 minuti: si rich
 /* ---------- utilità ---------- */
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","presenze":"<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8\"/>","prec":"<path d=\"M15 6l-6 6 6 6\"/>","succ":"<path d=\"M9 6l6 6-6 6\"/>","alfa":"<path d=\"M4 17 7.5 7l3.5 10M5.2 13.5h4.6M14 7h6l-6 10h6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
+const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","presenze":"<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8\"/>","elimina":"<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>","prec":"<path d=\"M15 6l-6 6 6 6\"/>","succ":"<path d=\"M9 6l6 6-6 6\"/>","alfa":"<path d=\"M4 17 7.5 7l3.5 10M5.2 13.5h4.6M14 7h6l-6 10h6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
 const ico = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICO[n] || ""}</svg>`;
 const GIORNI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
 const GG = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
@@ -108,7 +108,9 @@ async function gd(url, opt = {}) {
   if (r.status === 401) { S.token = null; throw new ErroreAccesso("Accesso a Google scaduto."); }
   if (!r.ok) {
     let m = ""; try { m = (await r.json()).error?.message || ""; } catch (e) { /* risposta non JSON */ }
-    throw new Error(`Google Drive ha risposto con un errore (${r.status})${m ? ": " + m : ""}`);
+    const e = new Error(`Google Drive ha risposto con un errore (${r.status})${m ? ": " + m : ""}`);
+    e.stato = r.status;
+    throw e;
   }
   return r;
 }
@@ -117,7 +119,21 @@ const elenca = async (query, campi = "files(id,name,parents,modifiedTime,size)")
   (await (await gd(`${DRIVE}/files?q=${q(query)}&fields=${q(campi)}&orderBy=modifiedTime desc&pageSize=50&spaces=drive`)).json()).files || [];
 const scarica = async (id) => new Uint8Array(await (await gd(`${DRIVE}/files/${id}?alt=media`)).arrayBuffer());
 
+/** Il file inviato prima è ancora lì? (null se il PC l'ha già preso: cancellato o nel cestino) */
+async function ancoraSuDrive(id) {
+  try { const f = await (await gd(`${DRIVE}/files/${id}?fields=id,trashed`)).json(); return f.trashed ? null : f; }
+  catch (e) { if (e.stato === 404) return null; throw e; }
+}
+/** Toglie da Drive un file inviato dal telefono. false = il PC l'aveva già preso. */
+async function eliminaDaDrive(id) {
+  if (!(await ancoraSuDrive(id))) return false;
+  try { await gd(`${DRIVE}/files/${id}`, { method: "DELETE" }); } catch (e) { if (e.stato !== 404) throw e; return false; }
+  return true;
+}
+
 async function carica(nome, cartella, bytes, idEsistente) {
+  // se il PC ha già preso il file di prima, se ne crea uno nuovo (altrimenti la correzione finirebbe nel cestino)
+  if (idEsistente && !(await ancoraSuDrive(idEsistente))) idEsistente = null;
   if (idEsistente) {
     return (await gd(`${UPLOAD}/files/${idEsistente}?uploadType=media&fields=id,name`, { method: "PATCH", headers: { "Content-Type": "application/octet-stream" }, body: bytes })).json();
   }
@@ -530,55 +546,70 @@ function presenzeInAttesa() {
 const giorniPC = () => new Map((S.D.allenamenti || []).map((a) => [a.data, a.n]));
 
 let meseCal = null;
-function apriCalendario() {
+/** sposta = { da, sel }: si sta cambiando il giorno di presenze già segnate */
+function apriCalendario(sposta = null) {
   S.vista = "calendario";
   if (!meseCal) { const d = new Date(); meseCal = [d.getFullYear(), d.getMonth()]; }
   const pc = giorniPC(), inv = new Map(presenzeInAttesa().map((p) => [p.data, p.presenti.length]));
   const gareG = new Set(gare().map((g) => g.data)), oggi = isoOggi();
   const [y, m] = meseCal;
+  const ora = new Date(), ultimoMese = y > ora.getFullYear() || (y === ora.getFullYear() && m >= ora.getMonth());
   const primo = new Date(y, m, 1), giorni = new Date(y, m + 1, 0).getDate();
   const vuoti = (primo.getDay() + 6) % 7;           // settimana da lunedì
   let celle = "";
   for (let i = 0; i < vuoti; i++) celle += `<span></span>`;
   for (let d = 1; d <= giorni; d++) {
     const iso = `${y}-${pad(m + 1)}-${pad(d)}`;
-    const cl = [iso === oggi ? "oggi" : "", pc.has(iso) ? "pc" : "", inv.has(iso) ? "inv" : "", gareG.has(iso) ? "gara" : ""].join(" ");
+    const fut = iso > oggi, no = pc.has(iso) || fut;
+    const cl = [iso === oggi ? "oggi" : "", pc.has(iso) ? "pc" : "", fut ? "fut" : "", inv.has(iso) ? "inv" : "", gareG.has(iso) ? "gara" : "", sposta?.da === iso ? "da" : ""].join(" ");
     const sotto = pc.has(iso) ? `<small>${pc.get(iso)}</small>` : inv.has(iso) ? `<small>${inv.get(iso)}</small>` : "";
-    celle += `<button class="gc ${cl}" data-d="${iso}" ${pc.has(iso) ? 'aria-disabled="true"' : ""} aria-label="${esc(giornoData(iso))}${pc.has(iso) ? ", presenze già sul PC" : ""}"><b>${d}</b>${sotto}</button>`;
+    celle += `<button class="gc ${cl}" data-d="${iso}" ${no ? 'aria-disabled="true"' : ""} aria-label="${esc(giornoData(iso))}${pc.has(iso) ? ", presenze già sul PC" : ""}"><b>${d}</b>${sotto}</button>`;
   }
   const nomeMese = primo.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-  app().innerHTML = testata("Presenze", "Scegli il giorno dell'allenamento", `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+  app().innerHTML = testata("Presenze", sposta ? `Sposta dal ${dataIt(sposta.da)}: scegli il giorno giusto` : "Scegli il giorno dell'allenamento", `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
     <section class="pag">
       <div class="card cal">
-        <div class="calh"><button class="ib" id="mPrec" aria-label="Mese precedente">${ico("prec")}</button><b>${esc(nomeMese)}</b><button class="ib" id="mSucc" aria-label="Mese successivo">${ico("succ")}</button></div>
+        <div class="calh"><button class="ib" id="mPrec" aria-label="Mese precedente">${ico("prec")}</button><b>${esc(nomeMese)}</b><button class="ib" id="mSucc" aria-label="Mese successivo" ${ultimoMese ? "disabled" : ""}>${ico("succ")}</button></div>
         <div class="calg">${["L", "M", "M", "G", "V", "S", "D"].map((x) => `<i>${x}</i>`).join("")}${celle}</div>
       </div>
       <div class="leg">
         <span><i class="l pc"></i>presenze già sul PC (non selezionabile)</span>
+        <span><i class="l fut"></i>giorni futuri (non selezionabili)</span>
         <span><i class="l inv"></i>inviate dal telefono, in attesa del PC</span>
         <span><i class="l gara"></i>giorno di gara</span>
       </div>
       <button class="btn verde lg" id="bOggi" ${pc.has(oggi) ? "disabled" : ""}>${ico("presenze")} Presenze di oggi</button>
       ${pc.has(oggi) ? `<p class="nota">Le presenze di oggi sono già sul PC: eventuali correzioni si fanno dal PC.</p>` : ""}
     </section>`;
-  $("bInd").onclick = () => { meseCal = null; vaiHome(); };
+  const scegli = (iso) => {
+    if (sposta) {
+      if (iso === sposta.da) return apriPresenze(iso, { ...sposta, da: iso });
+      if (inv.has(iso) && !confirm(`Il ${dataIt(iso)} ha già presenze inviate dal telefono: sostituirle con queste?`)) return;
+    }
+    apriPresenze(iso, sposta);
+  };
+  $("bInd").onclick = () => { if (sposta) return apriPresenze(sposta.da, { ...sposta }); meseCal = null; vaiHome(); };
   $("mPrec").onclick = () => { meseCal = m === 0 ? [y - 1, 11] : [y, m - 1]; apriCalendario(); };
-  $("mSucc").onclick = () => { meseCal = m === 11 ? [y + 1, 0] : [y, m + 1]; apriCalendario(); };
-  $("bOggi").onclick = () => apriPresenze(oggi);
+  $("mSucc").onclick = () => { if (ultimoMese) return; meseCal = m === 11 ? [y + 1, 0] : [y, m + 1]; apriCalendario(); };
+  $("bOggi").onclick = () => scegli(oggi);
   app().querySelector(".calg").onclick = (e) => {
     const b = e.target.closest("[data-d]");
     if (!b) return;
     if (pc.has(b.dataset.d)) return toast(`Il ${dataIt(b.dataset.d)} ha già le presenze sul PC (${pc.get(b.dataset.d)} presenti): correggile dal PC.`, true);
-    apriPresenze(b.dataset.d);
+    if (b.dataset.d > oggi) return toast("Le presenze si segnano solo per oggi o per i giorni passati.", true);
+    scegli(b.dataset.d);
   };
 }
 
 let presVista = { fr: false, ord: "rep" };   // solo per questa apertura dell'app
-function apriPresenze(data) {
+/** sposta = { da, sel }: presenze portate da un altro giorno (quelle del giorno "da" si tolgono all'invio) */
+function apriPresenze(data, sposta = null) {
   S.vista = "presenze";
+  const origine = sposta?.da || data;                       // giorno di cui ci sono (forse) presenze già inviate
   const prima = S.pend[fileP(data)]?.p;
-  const sel = new Set(prima ? prima.presenti : []);
-  let salvata = !!prima;
+  const inviataOrig = S.pend[fileP(origine)];
+  const sel = new Set(sposta ? sposta.sel : prima ? prima.presenti : []);
+  let salvata = !!prima && !sposta;
   const giocatori = () => S.D.persone.filter((p) => p.app !== "STAFF" && (presVista.fr || p.app !== "FUORI_ROSA" || sel.has(p.id)))
     .sort((a, b) => presVista.ord === "rep" ? REP_ORD.indexOf(a.reparto) - REP_ORD.indexOf(b.reparto) || (a.cognome + a.nome).localeCompare(b.cognome + b.nome)
       : (a.cognome + a.nome).localeCompare(b.cognome + b.nome));
@@ -603,9 +634,11 @@ function apriPresenze(data) {
   };
   const conta = () => `<b>${sel.size}</b> presenti su ${giocatori().length}`;
   const disegna = () => {
-    app().innerHTML = testata("Presenze", giornoData(data), `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+    app().innerHTML = testata("Presenze", giornoData(data), `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`,
+      `<button class="ib" id="bGiorno" aria-label="Cambia giorno">${ico("calendario")}</button>`) + `
     <section class="pag">
-      ${prima ? `<p class="avviso">${ico("orologio")}<span>Presenze già inviate dal telefono e non ancora prese dal PC: puoi correggerle e inviarle di nuovo.</span></p>` : ""}
+      ${origine !== data ? `<p class="avviso">${ico("calendario")}<span>Giorno cambiato: dal <b>${esc(giornoData(origine))}</b> al <b>${esc(giornoData(data))}</b>. Con <b>Salva e invia</b> ${inviataOrig ? `quelle già inviate per il ${dataIt(origine)} vengono tolte.` : "si inviano per il giorno nuovo."}</span></p>`
+        : prima ? `<p class="avviso">${ico("orologio")}<span>Presenze già inviate dal telefono e non ancora prese dal PC: puoi correggerle, cambiare giorno (${ico("calendario")} in alto) o eliminarle.</span></p>` : ""}
       <div class="tabs"><div class="seg">
         <button data-o="rep" class="${presVista.ord === "rep" ? "on" : ""}">${ico("persone")} Per reparto</button>
         <button data-o="alfa" class="${presVista.ord === "alfa" ? "on" : ""}">${ico("alfa")} A-Z</button></div></div>
@@ -614,8 +647,10 @@ function apriPresenze(data) {
       ${nFR ? `<label class="interr"><input type="checkbox" id="cFR" ${presVista.fr ? "checked" : ""}><span class="sw"></span> Mostra fuori rosa (${nFR})</label>` : ""}
       <div id="elenco">${elenco()}</div>
     </section>
-    <nav class="barra"><button class="btn pri lg" id="bInvia">${ico("nuvola")} Salva e invia</button></nav>`;
+    <nav class="barra">${inviataOrig ? `<button class="btn" id="bElimina" style="flex:0 0 auto">${ico("elimina")} Elimina</button>` : ""}<button class="btn pri lg" id="bInvia">${ico("nuvola")} Salva e invia</button></nav>`;
     $("bInd").onclick = () => { if (!salvata && sel.size && !confirm("Le presenze non sono state inviate. Uscire lo stesso?")) return; apriCalendario(); };
+    $("bGiorno").onclick = () => apriCalendario({ da: origine, sel: [...sel] });
+    if ($("bElimina")) $("bElimina").onclick = elimina;
     app().querySelectorAll("[data-o]").forEach((b) => (b.onclick = () => { presVista.ord = b.dataset.o; disegna(); }));
     if ($("cFR")) $("cFR").onchange = (e) => { presVista.fr = e.target.checked; disegna(); };
     $("bTutti").onclick = () => { giocatori().forEach((p) => sel.add(p.id)); salvata = false; disegna(); };
@@ -645,11 +680,34 @@ function apriPresenze(data) {
       const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), S.pend[nome]?.id);
       S.pend[nome] = { id: r.id || S.pend[nome]?.id, p };
       salvata = true;
-      toast(`Presenze del ${dataIt(data)} inviate (${sel.size}): il PC le prenderà all'apertura dell'app.`);
+      let extra = "";
+      if (origine !== data && inviataOrig) {
+        const tolta = await eliminaDaDrive(inviataOrig.id).catch(() => null);
+        delete S.pend[fileP(origine)];
+        if (tolta === false) extra = ` Attenzione: quelle del ${dataIt(origine)} erano già state prese dal PC, correggile dal PC.`;
+        else if (tolta === null) extra = ` Non sono riuscito a togliere quelle del ${dataIt(origine)}: eliminale dal PC.`;
+      }
+      toast(`Presenze del ${dataIt(data)} inviate (${sel.size}): il PC le prenderà all'apertura dell'app.` + extra, !!extra);
       meseCal = null;
       vaiHome();
     } catch (e) {
       b.disabled = false; b.innerHTML = `${ico("nuvola")} Salva e invia`;
+      if (e instanceof ErroreAccesso) return riaccedi();
+      toast(e.message, true);
+    }
+  };
+  const elimina = async () => {
+    if (!confirm(`Eliminare le presenze del ${dataIt(origine)} inviate dal telefono?`)) return;
+    const b = $("bElimina");
+    b.disabled = true;
+    try {
+      const tolta = await eliminaDaDrive(inviataOrig.id);
+      delete S.pend[fileP(origine)];
+      toast(tolta ? `Presenze del ${dataIt(origine)} eliminate.` : `Il PC aveva già preso le presenze del ${dataIt(origine)}: correggile o eliminale dal PC.`, !tolta);
+      meseCal = null;
+      vaiHome();
+    } catch (e) {
+      b.disabled = false;
       if (e instanceof ErroreAccesso) return riaccedi();
       toast(e.message, true);
     }
