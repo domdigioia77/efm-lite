@@ -215,3 +215,73 @@ h2.sez .n{font:600 14px Barlow;color:var(--muted);text-transform:none;letter-spa
 .gc.da{outline:3px dashed var(--accent);outline-offset:-3px}
 .leg .l.fut{background:transparent;border:1.5px dashed var(--line)}
 .avviso span svg.i{width:15px;height:15px;vertical-align:-2px;margin:0}
+
+/* pagina della gara, formazione, compiti, referto (1.3) */
+.riass{display:flex;flex-direction:column;gap:2px}
+.riass b{font:700 19px "Barlow Condensed",Barlow,sans-serif}
+.riass .muted{font-size:14px}
+.tiles{display:flex;flex-direction:column;gap:10px}
+.tile{display:flex;align-items:center;gap:14px;width:100%;min-height:68px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--text);text-align:left;cursor:pointer}
+.tile:active{background:var(--accent-soft)}
+.tile .ti{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.tile .ti svg.i{width:24px;height:24px}
+.tile .tt{flex:1;min-width:0}
+.tile .tt b{display:block;font:700 19px/1.15 "Barlow Condensed",Barlow,sans-serif;text-transform:uppercase;letter-spacing:.3px}
+.tile .tt small{color:var(--muted);font-size:14px}
+.tile>svg.i{color:var(--muted)}
+.tile.dis{opacity:.55}
+.avviso.err{background:var(--sq-soft);border-color:var(--sq)}
+.avviso.err svg.i{color:var(--sq)}
+.avviso.ok{background:var(--accent-soft);border-color:var(--accent)}
+.avviso.ok svg.i{color:var(--accent)}
+.rform{display:flex;align-items:center;gap:10px;padding:8px 10px;border-top:1px solid var(--line)}
+.rform:first-child{border-top:0}
+.rform:nth-child(even){background:var(--zebra)}
+.rform .num{width:58px;min-height:46px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);text-align:center;font:700 20px "Barlow Condensed",Barlow,sans-serif;padding:0;-moz-appearance:textfield}
+.rform .num::-webkit-inner-spin-button,.rform .num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.rform .num:focus{border-color:var(--accent);outline:0}
+.rform .num.doppio{border-color:var(--sq);background:var(--sq-soft)}
+.rform .nome{flex:1;min-width:0}
+.rform .nome b{text-transform:uppercase}
+.rform .nome small{display:block;color:var(--muted);font-size:13px}
+.cv{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font:700 16px "Barlow Condensed",Barlow,sans-serif;color:var(--muted);cursor:pointer;flex:none}
+.cv.on{background:var(--giallo);border-color:var(--giallo-b);color:var(--giallo-ink)}
+.cpsez summary{font:700 18px "Barlow Condensed",Barlow,sans-serif;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none}
+.cpsez summary::-webkit-details-marker{display:none}
+.cpsez summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+.cpsez[open] summary::before{transform:rotate(90deg)}
+.cpsez summary .n{margin-left:auto;font:700 13px Barlow;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:2px 9px}
+.cpg{font:700 13px Barlow;color:var(--accent);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 4px}
+.cpr{padding:8px 0;border-top:1px solid var(--line)}
+.cpl{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.cps{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cps label{display:flex;align-items:center;gap:4px;min-width:0}
+.cps label i{font-style:normal;font-weight:700;font-size:13px;color:var(--muted);width:22px;flex:none}
+.cps select,.foglio select{width:100%;min-width:0;min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);padding:0 8px;font-size:15px}
+.risult .sq{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+.risult .sq span{font:700 18px "Barlow Condensed",Barlow,sans-serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.risult .sq b{font:700 32px "Barlow Condensed",Barlow,sans-serif;min-width:40px;text-align:center}
+.subiti,.durata>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.durata>div:first-child{border-top:0}
+.durata b{font:700 22px "Barlow Condensed",Barlow,sans-serif}
+.step{display:inline-flex;align-items:center;gap:10px}
+.step .ib{font-size:24px;font-weight:700}
+.step b{min-width:44px;text-align:center;font:700 24px "Barlow Condensed",Barlow,sans-serif}
+.agg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.agg .btn{min-height:46px;font-size:15px;padding:0 10px}
+.agg .btn:first-child{grid-column:1/-1;background:var(--accent);border-color:var(--accent);color:#fff}
+.rev{display:flex;align-items:center;gap:10px;width:100%;min-height:54px;padding:6px 12px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.rev:first-child{border-top:0}
+.rev:nth-child(even){background:var(--zebra)}
+.rev .min{width:42px;font:700 20px "Barlow Condensed",Barlow,sans-serif;color:var(--accent)}
+.rev .tic{width:30px;display:grid;place-items:center}
+.rev .tx{flex:1;min-width:0;font-size:15px}
+.rev>svg.i{color:var(--muted)}
+#refInvio{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+#refInvio .salvato{display:flex;align-items:center;gap:6px;justify-content:center;color:var(--muted);font-size:13.5px}
+.foglio{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.fbox{width:100%;max-width:640px;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));animation:su .2s;max-height:90vh;overflow:auto}
+.fbox h3{display:flex;align-items:center;gap:8px;margin:0 0 14px;font:700 21px "Barlow Condensed",Barlow,sans-serif;text-transform:uppercase}
+.fbox .campo input{font-size:20px}
+.fazioni{display:flex;gap:10px;align-items:center;margin-top:6px}
+.fazioni .sp{flex:1}

@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.2";
+const VERSIONE = "1.3";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -21,7 +21,7 @@ const BLOCCO_MINUTI = 5;          // in background per più di 5 minuti: si rich
 /* ---------- utilità ---------- */
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","presenze":"<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8\"/>","elimina":"<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>","prec":"<path d=\"M15 6l-6 6 6 6\"/>","succ":"<path d=\"M9 6l6 6-6 6\"/>","alfa":"<path d=\"M4 17 7.5 7l3.5 10M5.2 13.5h4.6M14 7h6l-6 10h6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
+const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","presenze":"<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8\"/>","elimina":"<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>","maglia":"<path d=\"M8 3 3 6l2 5 3-1v11h8V10l3 1 2-5-5-3a4 4 0 0 1-8 0Z\"/>","bersaglio":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>","fischietto":"<path d=\"M3 11a5 5 0 0 0 9.5 2.2L21 11V7H8a5 5 0 0 0-5 4Z\"/><circle cx=\"8\" cy=\"12\" r=\"1.5\"/><path d=\"M14 7V4\"/>","cambio":"<path d=\"M7 4v13M3.5 13.5 7 17l3.5-3.5M17 20V7M13.5 10.5 17 7l3.5 3.5\"/>","gialla":"<rect x=\"7\" y=\"3.5\" width=\"10\" height=\"17\" rx=\"1.5\" fill=\"#F2C230\" stroke=\"#B8901A\"/>","rossa":"<rect x=\"7\" y=\"3.5\" width=\"10\" height=\"17\" rx=\"1.5\" fill=\"#D23C3C\" stroke=\"#9E2424\"/>","prec":"<path d=\"M15 6l-6 6 6 6\"/>","succ":"<path d=\"M9 6l6 6-6 6\"/>","alfa":"<path d=\"M4 17 7.5 7l3.5 10M5.2 13.5h4.6M14 7h6l-6 10h6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
 const ico = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICO[n] || ""}</svg>`;
 const GIORNI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
 const GG = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
@@ -64,7 +64,7 @@ function toast(msg, err = false) {
 let S = null;
 function azzera() {
   if (S?.chiave) try { sodium.memzero(S.chiave); } catch (e) { /* già azzerata */ }
-  S = { token: null, scade: 0, lite: null, bin: null, sale: null, chiave: null, D: null, pend: {}, modello: "", errori: 0, attesa: 0, vista: null };
+  S = { token: null, scade: 0, lite: null, bin: null, sale: null, chiave: null, D: null, pend: {}, ref: {}, partita: null, modello: "", errori: 0, attesa: 0, vista: null };
 }
 azzera();
 
@@ -378,40 +378,85 @@ function badgeRep(p, sm = "") {
 /* ============================================================
    GARA: dati e convocati
    ============================================================ */
-function apriGara(g) {
+const fileR = (id) => TEL_PREF + "r" + id + ".efm";
+const TIPI_EV = { GOL: ["palla", "Gol"], AUTOGOL: ["palla", "Autogol avversario"], SOST: ["cambio", "Sostituzione"], AMM: ["gialla", "Ammonizione"], ESP: ["rossa", "Espulsione"] };
+const nomeBreve = (p) => p ? `${p.cognome} ${p.nome ? p.nome[0] + "." : ""}` : "?";
+
+/* ============================================================
+   GARA: pagina della gara con Dati, Convocati, Formazione, Compiti, Referto
+   ============================================================ */
+function apriGara(g, vistaIniziale = null) {
   S.vista = "gara";
   const nuova = !g;
   const E = g ? JSON.parse(JSON.stringify({ ...g, orig: undefined })) : {
     id: null, uid: crypto.randomUUID(), data: "", avversario: "", campo: "", ora_presentazione: "", ora_inizio: "",
-    casa_trasferta: "C", competizione: "CAMP", convocati: [],
+    casa_trasferta: "C", competizione: "CAMP", convocati: [], compiti: { ruoli: {}, note: {} }, durata: S.D.durata_default || 90,
   };
   delete E.orig;
+  if (!E.compiti || Array.isArray(E.compiti)) E.compiti = { ruoli: {}, note: {} };
+  if (Array.isArray(E.compiti.ruoli)) E.compiti.ruoli = {};
+  if (Array.isArray(E.compiti.note)) E.compiti.note = {};
+  if (!E.durata) E.durata = S.D.gare.find((x) => x.id === E.id)?.durata || S.D.durata_default || 90;
   const orig = g ? (g.orig ? JSON.parse(JSON.stringify(g.orig)) : null) : null;
-  let tab = "dati", salvata = !nuova, filtro = "";
+  let vista = vistaIniziale || (nuova ? "dati" : "hub"), salvata = !nuova, filtro = "";
   const conv = new Map((E.convocati || []).map((c) => [c.id, c]));
 
   const convocabili = () => S.D.persone.filter((p) => p.app !== "STAFF" || conv.has(p.id))
     .sort((a, b) => REP_ORD.indexOf(a.reparto) - REP_ORD.indexOf(b.reparto) || (a.cognome + a.nome).localeCompare(b.cognome + b.nome));
+  const convOrd = () => [...conv.values()].map((c) => ({ ...c, p: persona(c.id) })).filter((c) => c.p)
+    .sort((a, b) => (a.n == null) - (b.n == null) || (a.n || 0) - (b.n || 0) || (a.p.cognome + a.p.nome).localeCompare(b.p.cognome + b.p.nome));
   const leggiForm = () => {
     const f = $("fGara");
-    if (!f) return;
-    for (const k of ["data", "ora_presentazione", "ora_inizio", "avversario", "campo"]) E[k] = f[k].value.trim();
+    if (f) for (const k of ["data", "ora_presentazione", "ora_inizio", "avversario", "campo"]) E[k] = f[k].value.trim();
+    app().querySelectorAll("[data-num]").forEach((i) => { const c = conv.get(+i.dataset.num); if (c) c.n = i.value === "" ? null : +i.value; });
+    app().querySelectorAll("[data-nota]").forEach((i) => { const t = i.value.trim(); if (t) E.compiti.note[i.dataset.nota] = t; else delete E.compiti.note[i.dataset.nota]; });
   };
   const titolo = () => nuova && !E.data ? "Nuova gara" : E.data ? `${GIORNI[dataDa(E.data).getDay()]} ${dataIt(E.data)}` : "Gara";
+  const sotto = () => E.avversario ? (E.casa_trasferta === "T" ? "in trasferta · " : "in casa · ") + E.avversario : (nuova ? "da salvare su Drive" : "");
+  const nCompiti = () => Object.entries(E.compiti.ruoli).reduce((t, [, v]) => t + v.filter((id) => conv.has(id)).length, 0);
+  const titolari = () => [...conv.values()].filter((c) => c.n >= 1 && c.n <= 11).length;
+
+  /** controlli come sul PC: numeri 1–99 non ripetuti, un capitano, un vice */
+  const erroriFormazione = () => {
+    const visti = {}, err = [];
+    for (const c of conv.values()) {
+      if (c.n == null) continue;
+      if (!Number.isInteger(c.n) || c.n < 1 || c.n > 99) err.push(`numero ${c.n} non valido (1-99)`);
+      else if (visti[c.n]) err.push(`il numero ${c.n} è assegnato due volte`);
+      visti[c.n] = true;
+      if (c.c && c.v) err.push(`${nomeBreve(persona(c.id))} non può essere capitano e vice`);
+    }
+    if ([...conv.values()].filter((c) => c.c).length > 1) err.push("c'è più di un capitano");
+    if ([...conv.values()].filter((c) => c.v).length > 1) err.push("c'è più di un vice capitano");
+    return err;
+  };
+
+  const tile = (v, ic, nome, stato, dis = "") => `<button class="tile ${dis ? "dis" : ""}" data-v="${v}" ${dis ? `data-dis="${esc(dis)}"` : ""}>
+    <span class="ti">${ico(ic)}</span><span class="tt"><b>${nome}</b><small>${stato}</small></span>${ico("succ")}</button>`;
 
   const disegna = () => {
     leggiForm();
-    const L = convocabili(), n = conv.size;
-    app().innerHTML = testata(titolo(), E.avversario ? (E.casa_trasferta === "T" ? "in trasferta · " : "in casa · ") + E.avversario : (nuova ? "da salvare su Drive" : ""),
-      `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
-    <section class="pag">
-      <div class="tabs"><div class="seg" role="tablist">
-        <button data-t="dati" class="${tab === "dati" ? "on" : ""}" role="tab">${ico("calendario")} Gara</button>
-        <button data-t="conv" class="${tab === "conv" ? "on" : ""}" role="tab">${ico("persone")} Convocati (${n})</button>
-      </div></div>
-      ${g?.attesa ? `<p class="avviso">${ico("orologio")}<span>Modifica già inviata dal telefono: il PC la applicherà quando apri l'app (se nel frattempo la gara è cambiata anche sul PC, ti chiederà quale versione tenere).</span></p>` : ""}
-      ${tab === "dati" ? `
-      <form id="fGara" autocomplete="off" onsubmit="return false">
+    S.vista = "gara";
+    const n = conv.size;
+    const barra = `<nav class="barra"><button class="btn" id="bReport">${ico("report")} Report</button><button class="btn pri" id="bSalva">${ico("nuvola")} Salva</button></nav>`;
+    let corpo = "";
+    if (vista === "hub") {
+      const cap = [...conv.values()].find((c) => c.c), oggi = isoOggi();
+      const R = E.id ? (S.ref[E.id] || S.pend[fileR(E.id)]?.p) : null;
+      const refStato = !E.id ? "si potrà fare quando la gara sarà sul PC" : E.data !== oggi ? `disponibile il giorno della gara (${dataIt(E.data)})`
+        : R ? (R.chiuso ? "inviato al PC con Fine gara" : `in corso · ${R.eventi.length} eventi`) : "da compilare";
+      corpo = `<div class="card riass">
+          <div><b>${esc(giornoData(E.data || oggi))}</b>${E.ora_inizio ? ` · ore ${esc(E.ora_inizio)}` : ""}</div>
+          <div class="muted">${E.casa_trasferta === "T" ? "In trasferta" : "In casa"} · ${esc(COMP[E.competizione]?.[1] || "")}${E.campo ? " · " + esc(E.campo) : ""}</div></div>
+        <div class="tiles">
+          ${tile("dati", "calendario", "Dati gara", E.data ? `${dataIt(E.data)}${E.ora_presentazione ? " · pres. " + esc(E.ora_presentazione) : ""}` : "da compilare")}
+          ${tile("conv", "persone", "Convocati", n ? `${n} convocati` : "nessuno")}
+          ${tile("form", "maglia", "Formazione", n ? `${titolari()} titolari (1-11)${cap ? " · C: " + esc(nomeBreve(persona(cap.id))) : ""}` : "prima i convocati", n ? "" : "Scegli prima i convocati.")}
+          ${tile("comp", "bersaglio", "Compiti", n ? (nCompiti() ? `${nCompiti()} posti assegnati` : "da assegnare") : "prima i convocati", n ? "" : "Scegli prima i convocati.")}
+          ${tile("ref", "fischietto", "Referto", refStato, !E.id ? "La gara nuova deve prima arrivare al PC: il referto si fa sulle gare già presenti sul PC." : E.data !== oggi ? "Il referto si compila dal telefono solo il giorno della gara." : "")}
+        </div>`;
+    } else if (vista === "dati") {
+      corpo = `<form id="fGara" autocomplete="off" onsubmit="return false">
         <label class="campo"><span>Data</span><input type="date" name="data" value="${esc(E.data)}" min="${isoOggi()}" required></label>
         <div class="due">
           <label class="campo"><span>Ora presentazione</span><input type="time" name="ora_presentazione" value="${esc(E.ora_presentazione)}"></label>
@@ -426,23 +471,66 @@ function apriGara(g) {
           ${Object.entries(COMP).map(([k, [ic, nome]]) => `<button type="button" data-v="${k}" class="${E.competizione === k ? "on" : ""}">${ico(ic)} ${nome}</button>`).join("")}</div></div>
         <datalist id="lAvv">${S.D.avversari.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
         <datalist id="lCampi">${S.D.campi.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
-      </form>` : `
-      <div class="riep" id="riep"><span>${riep()}</span><span class="sp"></span>
+      </form>`;
+    } else if (vista === "conv") {
+      corpo = `<div class="riep" id="riep"><span>${riep()}</span><span class="sp"></span>
         ${n ? `<button class="btn" id="bNessuno" style="min-height:40px">Togli tutti</button>` : ""}</div>
       <label class="campo cerca"><input type="search" id="cerca" placeholder="Cerca per cognome…" value="${esc(filtro)}"></label>
-      <div id="elenco">${elenco(L)}</div>`}
-    </section>
-    <nav class="barra">
-      <button class="btn" id="bReport">${ico("report")} Report</button>
-      <button class="btn pri" id="bSalva">${ico("nuvola")} Salva</button>
-    </nav>`;
-    $("bInd").onclick = esci;
-    app().querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { leggiForm(); tab = b.dataset.t; disegna(); window.scrollTo(0, 0); }));
-    if (tab === "dati") {
+      <div id="elenco">${elenco(convocabili())}</div>`;
+    } else if (vista === "form") {
+      const L = convOrd(), err = erroriFormazione();
+      corpo = `<div class="riep"><span id="rForm"><b>${titolari()}</b> titolari (numeri 1-11) su ${n} convocati</span></div>
+        <p class="avviso err" id="eForm" ${err.length ? "" : "hidden"}>${ico("avviso")}<span>${esc(err.join("; "))}</span></p>
+        <p class="nota">Scrivi il numero di maglia: dall'1 all'11 sono i titolari (servono al PC per i minuti giocati). Tocca <b>C</b> per il capitano e <b>V</b> per il vice.</p>
+        <div class="lista">${L.map(({ id, n: num, c, v, p }) => `<div class="rform">
+          <input class="num" type="number" inputmode="numeric" min="1" max="99" data-num="${id}" value="${num ?? ""}" aria-label="Numero di ${esc(p.cognome)}">
+          ${badgeRep(p, "sm")}<span class="nome"><b>${esc(p.cognome)}</b> ${esc(p.nome)}<small>${esc(p.ruolo || "")}</small></span>
+          <button class="cv ${c ? "on" : ""}" data-cap="${id}" aria-pressed="${!!c}" aria-label="Capitano">C</button>
+          <button class="cv ${v ? "on" : ""}" data-vice="${id}" aria-pressed="${!!v}" aria-label="Vice capitano">V</button></div>`).join("")}</div>`;
+    } else if (vista === "comp") {
+      const L = convOrd();
+      const opz = (sel) => `<option value="">—</option>` + L.map(({ id, n: num, p }) => `<option value="${id}" ${sel === id ? "selected" : ""}>${num != null ? num + " · " : ""}${esc(p.cognome)} ${esc(p.nome)}</option>`).join("");
+      const D = Object.fromEntries((S.D.compiti_def || []).map((x) => [x.id, x]));
+      const sez = (X) => {
+        if (!X) return "";
+        let gruppo = null, out = "";
+        for (const r of X.ruoli) {
+          if (r.g && r.g !== gruppo) { gruppo = r.g; out += `<div class="cpg">${esc(r.g)}</div>`; }
+          const v = (E.compiti.ruoli[r.k] || []).filter((id) => conv.has(id));
+          out += `<div class="cpr"><span class="cpl">${esc(r.l)}</span><div class="cps">${Array.from({ length: r.n }, (_, i) =>
+            `<label>${r.ord ? `<i>${i + 1}°</i>` : ""}<select data-r="${r.k}" data-i="${i}">${opz(v[i])}</select></label>`).join("")}</div></div>`;
+        }
+        return `<details class="card cpsez" ${Object.keys(E.compiti.ruoli).some((k) => X.ruoli.some((r) => r.k === k)) || X.id === "bar" ? "open" : ""}>
+          <summary>${esc(X.titolo)}<span class="n">${X.ruoli.reduce((t, r) => t + (E.compiti.ruoli[r.k] || []).filter((id) => conv.has(id)).length, 0)}</span></summary>
+          ${out}<label class="campo" style="margin:10px 0 0"><span>Nota</span><input data-nota="${X.id}" value="${esc(E.compiti.note[X.id] || "")}" maxlength="300" placeholder="facoltativa"></label></details>`;
+      };
+      corpo = `<p class="nota">Si sceglie tra i ${n} convocati; nello stesso compito un giocatore non si ripete.</p>${sez(D.bar)}${sez(D.pun)}${sez(D.ac)}${sez(D.af)}`;
+    }
+    const nomiVista = { dati: "Dati gara", conv: "Convocati", form: "Formazione", comp: "Compiti" };
+    app().innerHTML = testata(vista === "hub" ? titolo() : nomiVista[vista], vista === "hub" ? sotto() : titolo() + (E.avversario ? " · " + E.avversario : ""),
+      `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+    <section class="pag">
+      ${g?.attesa && vista === "hub" ? `<p class="avviso">${ico("orologio")}<span>Modifiche già inviate dal telefono: il PC le applicherà all'apertura (se intanto la gara è cambiata anche sul PC, ti chiederà quale versione tenere).</span></p>` : ""}
+      ${!salvata && vista === "hub" ? `<p class="avviso">${ico("avviso")}<span>Ci sono modifiche <b>non salvate</b>: premi Salva per mandarle al PC.</span></p>` : ""}
+      ${corpo}
+    </section>${barra}`;
+    $("bInd").onclick = () => { leggiForm(); if (vista !== "hub" && (!nuova || E.data)) { vista = "hub"; disegna(); window.scrollTo(0, 0); } else esci(); };
+    $("bSalva").onclick = salva;
+    $("bReport").onclick = () => { leggiForm(); E.convocati = [...conv.values()]; if (!E.data) { toast("Indica prima la data della gara.", true); vista = "dati"; disegna(); return; } report(E, salvata, () => { disegna(); }); };
+    if (vista === "hub") app().querySelectorAll(".tile").forEach((b) => (b.onclick = () => {
+      if (b.dataset.dis) return toast(b.dataset.dis, true);
+      if (b.dataset.v === "ref") {
+        if (!salvata) return toast("Salva prima la gara: il referto usa convocati e formazione salvati.", true);
+        return apriReferto(E, () => apriGara(S.D && gare().find((x) => x.id === E.id) || g, "hub"));
+      }
+      vista = b.dataset.v; disegna(); window.scrollTo(0, 0);
+    }));
+    if (vista === "dati") {
       $("sCT").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; E.casa_trasferta = b.dataset.v; salvata = false; disegna(); };
       $("sComp").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; E.competizione = b.dataset.v; salvata = false; disegna(); };
       $("fGara").oninput = () => { salvata = false; };
-    } else {
+    }
+    if (vista === "conv") {
       $("cerca").oninput = (e) => { filtro = e.target.value; $("elenco").innerHTML = elenco(convocabili()); };
       if ($("bNessuno")) $("bNessuno").onclick = () => { if (confirm("Togliere tutti i convocati?")) { conv.clear(); salvata = false; disegna(); } };
       $("elenco").onclick = (e) => {
@@ -454,12 +542,45 @@ function apriGara(g) {
         r.classList.toggle("on", conv.has(id));
         r.setAttribute("aria-pressed", conv.has(id));
         $("riep").firstElementChild.outerHTML = `<span>${riep()}</span>`;
-        app().querySelector("[data-t=conv]").innerHTML = `${ico("persone")} Convocati (${conv.size})`;
       };
     }
-    $("bSalva").onclick = salva;
-    $("bReport").onclick = () => { leggiForm(); E.convocati = [...conv.values()]; if (!E.data) { toast("Indica prima la data della gara.", true); tab = "dati"; disegna(); return; } report(E, salvata, () => apriGaraDi(E)); };
+    if (vista === "form") {
+      app().querySelector(".pag").oninput = () => { salvata = false; };
+      // al cambio di un numero si aggiornano solo conteggio e avvisi (ridisegnare farebbe perdere il tocco su C/V)
+      app().querySelector(".pag").addEventListener("change", () => {
+        leggiForm();
+        const err = erroriFormazione();
+        $("rForm").innerHTML = `<b>${titolari()}</b> titolari (numeri 1-11) su ${conv.size} convocati`;
+        $("eForm").hidden = !err.length; $("eForm").lastElementChild.textContent = err.join("; ");
+        const usati = {};
+        app().querySelectorAll("[data-num]").forEach((i) => { if (i.value) usati[i.value] = (usati[i.value] || 0) + 1; });
+        app().querySelectorAll("[data-num]").forEach((i) => i.classList.toggle("doppio", !!i.value && usati[i.value] > 1));
+      });
+      app().querySelectorAll("[data-cap],[data-vice]").forEach((b) => (b.onclick = () => {
+        leggiForm();
+        const id = +(b.dataset.cap || b.dataset.vice), k = b.dataset.cap ? "c" : "v", c = conv.get(id), era = c[k];
+        for (const x of conv.values()) x[k] = 0;        // un solo capitano e un solo vice
+        c[k] = era ? 0 : 1;
+        if (c[k]) c[k === "c" ? "v" : "c"] = 0;
+        salvata = false;
+        disegnaMantieniScroll();
+      }));
+    }
+    if (vista === "comp") {
+      app().querySelector(".pag").oninput = () => { salvata = false; };
+      app().querySelectorAll("select[data-r]").forEach((s) => (s.onchange = () => {
+        const k = s.dataset.r;
+        if (s.value) app().querySelectorAll(`select[data-r="${k}"]`).forEach((o) => { if (o !== s && o.value === s.value) o.value = ""; });
+        E.compiti.ruoli[k] = [...app().querySelectorAll(`select[data-r="${k}"]`)].map((o) => +o.value).filter(Boolean);
+        if (!E.compiti.ruoli[k].length) delete E.compiti.ruoli[k];
+        salvata = false;
+        const sm = s.closest("details").querySelector("summary .n");
+        const sezK = [...s.closest("details").querySelectorAll("select[data-r]")].map((o) => o.dataset.r);
+        sm.textContent = [...new Set(sezK)].reduce((t, kk) => t + (E.compiti.ruoli[kk] || []).length, 0);
+      }));
+    }
   };
+  const disegnaMantieniScroll = () => { const y = window.scrollY; disegna(); window.scrollTo(0, y); };
 
   const riep = () => {
     const eta = [...conv.keys()].map(persona).filter((p) => p?.nascita && E.data).map((p) => etaA(p.nascita, E.data));
@@ -493,9 +614,15 @@ function apriGara(g) {
   const salva = async () => {
     leggiForm();
     E.convocati = [...conv.values()].sort((a, b) => a.id - b.id);
-    if (!E.data) { toast("La data della gara è obbligatoria.", true); tab = "dati"; disegna(); return; }
-    if (E.data < isoOggi()) { toast("Dal telefono si programmano solo gare da oggi in poi.", true); tab = "dati"; disegna(); return; }
-    if (E.ora_presentazione && E.ora_inizio && E.ora_presentazione > E.ora_inizio) { toast("L'ora di presentazione deve essere prima dell'inizio gara.", true); tab = "dati"; disegna(); return; }
+    if (!E.data) { toast("La data della gara è obbligatoria.", true); vista = "dati"; disegna(); return; }
+    if (E.data < isoOggi()) { toast("Dal telefono si programmano solo gare da oggi in poi.", true); vista = "dati"; disegna(); return; }
+    if (E.ora_presentazione && E.ora_inizio && E.ora_presentazione > E.ora_inizio) { toast("L'ora di presentazione deve essere prima dell'inizio gara.", true); vista = "dati"; disegna(); return; }
+    const err = erroriFormazione();
+    if (err.length) { toast("Formazione: " + err.join("; ") + ".", true); vista = "form"; disegna(); return; }
+    // i compiti valgono solo per chi è convocato
+    const ruoli = {};
+    for (const [k, v] of Object.entries(E.compiti.ruoli)) { const f = v.filter((id) => conv.has(id)); if (f.length) ruoli[k] = f; }
+    E.compiti = { ruoli, note: { ...E.compiti.note } };
     const b = $("bSalva");
     b.disabled = true; b.innerHTML = `<span class="giro"></span> Salvo…`;
     try {
@@ -504,25 +631,202 @@ function apriGara(g) {
         v: 1, tipo: "gara", telefono: S.modello, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
         uid: E.id ? null : E.uid,
         gara: { id: E.id || null, data: E.data, avversario: E.avversario, campo: E.campo, ora_presentazione: E.ora_presentazione, ora_inizio: E.ora_inizio,
-                casa_trasferta: E.casa_trasferta, competizione: E.competizione, convocati: E.convocati },
+                casa_trasferta: E.casa_trasferta, competizione: E.competizione, convocati: E.convocati, compiti: E.compiti, durata: E.durata },
         originale: orig,
       };
       const prima = S.pend[nome];
       const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), prima?.id);
       S.pend[nome] = { id: r.id || prima?.id, p };
       salvata = true;
-      g = { ...p.gara, attesa: true, file: nome };
+      g = { ...p.gara, attesa: true, file: nome, orig, uid: p.uid };
       toast("Salvata su Google Drive: il PC la prenderà all'apertura dell'app.");
       disegna();
     } catch (e) {
-      if (e instanceof ErroreAccesso) { await riaccedi(); b.disabled = false; b.innerHTML = `${ico("nuvola")} Salva`; return; }
-      toast(e.message, true);
       b.disabled = false; b.innerHTML = `${ico("nuvola")} Salva`;
+      if (e instanceof ErroreAccesso) return riaccedi();
+      toast(e.message, true);
     }
   };
 
-  // dal report si torna alla stessa scheda (con le modifiche fatte)
-  const apriGaraDi = () => { S.vista = "gara"; disegna(); };
+  disegna();
+  window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   REFERTO: scritto a mano come sulla carta, solo il giorno della gara.
+   Il PC lo applica quando si preme "Fine gara".
+   ============================================================ */
+function erroriReferto(R, G) {
+  const conv = new Map((G.convocati || []).map((c) => [c.id, c]));
+  const staff = new Set(S.D.persone.filter((p) => p.app === "STAFF").map((p) => p.id));
+  const durata = R.durata_base + (R.recupero || 0);
+  const nome = (id) => nomeBreve(persona(id));
+  if (!conv.size) return ["mancano i convocati"];
+  if (durata < 10 || durata > 130) return ["durata della gara non valida"];
+  for (const e of R.eventi) {
+    const et = TIPI_EV[e.tipo]?.[1] || e.tipo, m = e.minuto;
+    if (m != null && (m < 0 || m > durata + 30)) return [`${et}: minuto ${m} non valido`];
+    if (e.tipo === "AUTOGOL") continue;
+    if (!e.giocatore_id) return [`${et}${m != null ? ` al ${m}'` : ""}: manca il giocatore`];
+    if (!conv.has(e.giocatore_id) && !(["AMM", "ESP"].includes(e.tipo) && staff.has(e.giocatore_id))) return [`${et}: ${nome(e.giocatore_id)} non è tra i convocati`];
+    if (e.tipo === "SOST") {
+      if (m == null) return ["per ogni sostituzione serve il minuto"];
+      if (!e.entra_id) return [`sostituzione al ${m}': manca chi entra`];
+      if (!conv.has(e.entra_id)) return [`sostituzione al ${m}': chi entra non è tra i convocati`];
+      if (e.entra_id === e.giocatore_id) return [`sostituzione al ${m}': esce ed entra lo stesso giocatore`];
+    }
+  }
+  // chi esce deve essere in campo (titolari = numeri 1-11, poi le sostituzioni in ordine di minuto)
+  const campo = new Set([...conv.values()].filter((c) => c.n >= 1 && c.n <= 11).map((c) => c.id)), espulsi = new Set();
+  const cron = R.eventi.map((e, i) => ({ ...e, i })).filter((e) => e.minuto != null && ["SOST", "ESP"].includes(e.tipo)).sort((a, b) => a.minuto - b.minuto || a.i - b.i);
+  for (const e of cron) {
+    if (e.tipo === "ESP") { campo.delete(e.giocatore_id); espulsi.add(e.giocatore_id); continue; }
+    if (!campo.has(e.giocatore_id)) return [`sostituzione al ${e.minuto}': ${nome(e.giocatore_id)} non è in campo in quel momento (i titolari sono i numeri 1-11 della formazione)`];
+    if (campo.has(e.entra_id)) return [`sostituzione al ${e.minuto}': ${nome(e.entra_id)} è già in campo`];
+    if (espulsi.has(e.entra_id)) return [`sostituzione al ${e.minuto}': ${nome(e.entra_id)} è stato espulso`];
+    campo.delete(e.giocatore_id); campo.add(e.entra_id);
+  }
+  return [];
+}
+
+let invioRef = null;   // invio del referto in attesa (rete assente o accesso scaduto)
+async function inviaReferto(R, silenzioso = false) {
+  const nome = fileR(R.gara_id);
+  const p = { v: 1, tipo: "referto", telefono: S.modello, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
+    gara_id: R.gara_id, chiuso: !!R.chiuso, gol_subiti: R.gol_subiti, durata: R.durata_base + (R.recupero || 0),
+    durata_base: R.durata_base, recupero: R.recupero || 0, eventi: R.eventi };
+  try {
+    const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), S.pend[nome]?.id);
+    S.pend[nome] = { id: r.id || S.pend[nome]?.id, p: JSON.parse(JSON.stringify(R)) };
+    R.inviato = new Date(); R.daInviare = false; invioRef = null;
+    statoInvio(R);
+    return true;
+  } catch (e) {
+    R.daInviare = true; invioRef = R;
+    R.erroreInvio = e instanceof ErroreAccesso ? "accesso" : "rete";
+    statoInvio(R);
+    if (!silenzioso && !(e instanceof ErroreAccesso)) toast(e.message, true);
+    return false;
+  }
+}
+function statoInvio(R) {
+  const el = $("refInvio");
+  if (!el) return;
+  el.innerHTML = R.daInviare
+    ? (R.erroreInvio === "accesso" ? `<span class="avviso err">${ico("avviso")}<span>Accesso Google scaduto: il referto è al sicuro qui, ma non è ancora su Drive.</span></span><button class="btn verde" id="bRinnova">${ico("sblocca")} Rinnova l'accesso e invia</button>`
+      : `<span class="avviso">${ico("orologio")}<span>Nessuna linea: il referto è al sicuro qui e parte da solo quando torna la connessione.</span></span>`)
+    : R.inviato ? `<span class="salvato">${ico("nuvola")} Salvato su Drive alle ${pad(R.inviato.getHours())}:${pad(R.inviato.getMinutes())}</span>` : "";
+  if ($("bRinnova")) $("bRinnova").onclick = async () => { try { await chiediToken(); await inviaReferto(R); } catch (e) { toast(e.message, true); } };
+}
+// riprova da solo: al ritorno della linea e ogni 30 secondi
+window.addEventListener("online", () => { if (invioRef && S.D && invioRef.erroreInvio !== "accesso") inviaReferto(invioRef, true); });
+setInterval(() => { if (invioRef && S.D && navigator.onLine && invioRef.erroreInvio !== "accesso") inviaReferto(invioRef, true); }, 30000);
+
+function apriReferto(G, torna) {
+  S.vista = "referto";
+  const id = G.id;
+  const base = S.pend[fileR(id)]?.p;
+  const R = S.ref[id] || (S.ref[id] = base ? JSON.parse(JSON.stringify(base)) : { gara_id: id, chiuso: false, gol_subiti: null, recupero: 0, durata_base: G.durata || S.D.durata_default || 90, eventi: [] });
+  if (R.durata_base == null) R.durata_base = G.durata || 90;
+  const conv = [...(G.convocati || [])].map((c) => ({ ...c, p: persona(c.id) })).filter((c) => c.p)
+    .sort((a, b) => (a.n == null) - (b.n == null) || (a.n || 0) - (b.n || 0) || a.p.cognome.localeCompare(b.p.cognome));
+  const staff = S.D.persone.filter((p) => p.app === "STAFF");
+  const nomeC = (pid) => { const c = conv.find((x) => x.id === pid); const p = c?.p || persona(pid); return p ? `${c?.n != null ? c.n + " " : ""}${p.cognome}` : "?"; };
+  const opz = (sel, conStaff = false) => `<option value="">— scegli —</option>` + conv.map((c) => `<option value="${c.id}" ${sel === c.id ? "selected" : ""}>${c.n != null ? c.n + " · " : ""}${esc(c.p.cognome)} ${esc(c.p.nome)}</option>`).join("")
+    + (conStaff && staff.length ? `<optgroup label="Staff">${staff.map((p) => `<option value="${p.id}" ${sel === p.id ? "selected" : ""}>${esc(p.cognome)} ${esc(p.nome)}</option>`).join("")}</optgroup>` : "");
+  const fatti = () => R.eventi.filter((e) => e.tipo === "GOL" || e.tipo === "AUTOGOL").length;
+  const salvaPresto = (() => { let t; return () => { clearTimeout(t); t = setTimeout(() => inviaReferto(R, true), 800); }; })();
+
+  const testoEv = (e) => e.tipo === "GOL" ? `Gol <b>${esc(nomeC(e.giocatore_id))}</b>${e.rigore ? " (rigore)" : ""}`
+    : e.tipo === "AUTOGOL" ? "Autogol avversario"
+    : e.tipo === "SOST" ? `Esce <b>${esc(nomeC(e.giocatore_id))}</b> · entra <b>${esc(nomeC(e.entra_id))}</b>`
+    : `${e.tipo === "AMM" ? "Ammonito" : "Espulso"} <b>${esc(nomeC(e.giocatore_id))}</b>`;
+
+  const disegna = () => {
+    const noi = S.D.stagione.squadra, loro = G.avversario || "Avversari";
+    const sub = R.gol_subiti ?? "–";
+    const [sx, dx, gsx, gdx] = G.casa_trasferta === "T" ? [loro, noi, sub, fatti()] : [noi, loro, fatti(), sub];
+    const ev = R.eventi.map((e, i) => ({ ...e, i })).sort((a, b) => (a.minuto ?? 999) - (b.minuto ?? 999) || a.i - b.i);
+    const inPartita = S.partita?.gid === id;
+    app().innerHTML = testata("Referto", `${G.avversario || ""} · ${dataIt(G.data)}`, `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+    <section class="pag">
+      ${R.chiuso ? `<p class="avviso ok">${ico("fatto")}<span>Referto chiuso con <b>Fine gara</b> e inviato: il PC lo applicherà all'apertura. Finché non lo prende puoi ancora correggerlo.</span></p>`
+        : inPartita ? `<p class="avviso">${ico("orologio")}<span><b>Gara in corso</b> dalle ${pad(new Date(S.partita.inizio).getHours())}:${pad(new Date(S.partita.inizio).getMinutes())}: la chiusura automatica è sospesa fino a <b>Fine gara</b>.</span></p>`
+        : `<button class="btn verde lg" id="bInizio">${ico("fischietto")} Inizio gara</button><p class="nota">Sospende la chiusura automatica dell'app fino a <b>Fine gara</b>, così con il telefono in tasca non chiede di nuovo accesso e PIN.</p>`}
+      <div class="card risult">
+        <div class="sq"><span>${esc(sx)}</span><b>${gsx ?? ""}</b></div>
+        <div class="sq"><span>${esc(dx)}</span><b>${gdx ?? ""}</b></div>
+        <div class="subiti"><span>Gol subiti</span>
+          <span class="step"><button class="ib" data-sub="-1" aria-label="Meno">−</button><b id="vSub">${R.gol_subiti ?? "–"}</b><button class="ib" data-sub="1" aria-label="Più">${ico("piu")}</button></span></div>
+        <p class="nota" style="margin:6px 0 0">I gol fatti si contano dai gol e dagli autogol avversari qui sotto.</p>
+      </div>
+      <div class="card durata">
+        <div><span class="muted">Durata regolamentare</span><b>${R.durata_base}'</b></div>
+        <div><span class="muted">Recupero 2° tempo</span><span class="step"><button class="ib" data-rec="-1" aria-label="Meno">−</button><b>${R.recupero || 0}'</b><button class="ib" data-rec="1" aria-label="Più">${ico("piu")}</button></span></div>
+        <div><span class="muted">Fine gara</span><b>${R.durata_base + (R.recupero || 0)}'</b></div>
+      </div>
+      <h2 class="sez">${ico("orologio")} Eventi <span class="sp"></span><span class="n">${R.eventi.length}</span></h2>
+      <div class="agg">${Object.entries(TIPI_EV).map(([k, [ic, l]]) => `<button class="btn ev-${k}" data-add="${k}">${ico(ic)} ${l.replace(" avversario", " avv.")}</button>`).join("")}</div>
+      ${ev.length ? `<div class="lista">${ev.map((e) => `<button class="rev" data-ev="${e.i}"><span class="min">${e.minuto != null ? e.minuto + "'" : "–"}</span>
+          <span class="tic ev-${e.tipo}">${ico(TIPI_EV[e.tipo][0])}</span><span class="tx">${testoEv(e)}</span>${ico("succ")}</button>`).join("")}</div>`
+        : `<div class="vuoto">Nessun evento: aggiungili con i pulsanti qui sopra.</div>`}
+      <div id="refInvio"></div>
+    </section>
+    <nav class="barra"><button class="btn" id="bSalvaR">${ico("nuvola")} Salva</button><button class="btn pri" id="bFine">${ico("fischietto")} ${R.chiuso ? "Invia di nuovo" : "Fine gara"}</button></nav>`;
+    statoInvio(R);
+    $("bInd").onclick = torna;
+    if ($("bInizio")) $("bInizio").onclick = () => { S.partita = { gid: id, inizio: Date.now() }; toast("Gara iniziata: chiusura automatica sospesa fino a Fine gara."); disegna(); };
+    app().querySelectorAll("[data-sub]").forEach((b) => (b.onclick = () => { R.gol_subiti = Math.max(0, Math.min(50, (R.gol_subiti ?? 0) + +b.dataset.sub)); salvaPresto(); disegna(); }));
+    app().querySelectorAll("[data-rec]").forEach((b) => (b.onclick = () => { R.recupero = Math.max(0, Math.min(20, (R.recupero || 0) + +b.dataset.rec)); salvaPresto(); disegna(); }));
+    app().querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => evento({ tipo: b.dataset.add, minuto: null, giocatore_id: null, entra_id: null, rigore: 0 }, null)));
+    app().querySelectorAll("[data-ev]").forEach((b) => (b.onclick = () => evento({ ...R.eventi[+b.dataset.ev] }, +b.dataset.ev)));
+    $("bSalvaR").onclick = async () => { if (await inviaReferto(R)) toast("Referto salvato su Drive (il PC lo applica dopo Fine gara)."); };
+    $("bFine").onclick = fine;
+  };
+
+  const evento = (e, idx) => {
+    const [ic, l] = TIPI_EV[e.tipo];
+    const foglio = document.createElement("div");
+    foglio.className = "foglio";
+    foglio.innerHTML = `<div class="fbox" role="dialog" aria-label="${esc(l)}">
+      <h3>${ico(ic)} ${esc(l)}</h3>
+      <label class="campo"><span>Minuto${e.tipo === "SOST" ? "" : " (facoltativo)"}</span><input type="number" inputmode="numeric" id="eMin" min="0" max="${R.durata_base + (R.recupero || 0) + 30}" value="${e.minuto ?? ""}"></label>
+      ${e.tipo === "GOL" ? `<label class="campo"><span>Marcatore</span><select id="eG">${opz(e.giocatore_id)}</select></label>
+          <label class="interr"><input type="checkbox" id="eRig" ${e.rigore ? "checked" : ""}><span class="sw"></span> Su rigore</label>` : ""}
+      ${e.tipo === "SOST" ? `<label class="campo"><span>Esce</span><select id="eG">${opz(e.giocatore_id)}</select></label>
+          <label class="campo"><span>Entra</span><select id="eE">${opz(e.entra_id)}</select></label>` : ""}
+      ${e.tipo === "AMM" || e.tipo === "ESP" ? `<label class="campo"><span>${e.tipo === "AMM" ? "Ammonito" : "Espulso"}</span><select id="eG">${opz(e.giocatore_id, true)}</select></label>` : ""}
+      <div class="fazioni">${idx != null ? `<button class="btn" id="eDel">${ico("elimina")}</button>` : ""}<span class="sp"></span>
+        <button class="btn" id="eNo">Annulla</button><button class="btn pri" id="eOk">${ico("fatto")} OK</button></div></div>`;
+    document.body.appendChild(foglio);
+    const chiudi = () => foglio.remove();
+    foglio.onclick = (ev) => { if (ev.target === foglio) chiudi(); };
+    $("eNo").onclick = chiudi;
+    if ($("eDel")) $("eDel").onclick = () => { if (!confirm("Eliminare questo evento?")) return; R.eventi.splice(idx, 1); chiudi(); salvaPresto(); disegna(); };
+    $("eOk").onclick = () => {
+      const m = $("eMin").value === "" ? null : +$("eMin").value;
+      const x = { tipo: e.tipo, minuto: m, giocatore_id: $("eG") ? (+$("eG").value || null) : null, entra_id: $("eE") ? (+$("eE").value || null) : null, rigore: $("eRig")?.checked ? 1 : 0 };
+      if (e.tipo === "SOST" && m == null) return toast("Per la sostituzione serve il minuto.", true);
+      if (e.tipo !== "AUTOGOL" && !x.giocatore_id) return toast("Scegli il giocatore.", true);
+      if (e.tipo === "SOST" && (!x.entra_id || x.entra_id === x.giocatore_id)) return toast("Scegli chi entra (diverso da chi esce).", true);
+      if (idx != null) R.eventi[idx] = x; else R.eventi.push(x);
+      chiudi(); salvaPresto(); disegna();
+    };
+    setTimeout(() => $("eMin")?.focus(), 50);
+  };
+
+  const fine = async () => {
+    if (R.gol_subiti == null) return toast("Indica i gol subiti (anche 0).", true);
+    const err = erroriReferto(R, G);
+    if (err.length) return toast("Referto: " + err[0] + ".", true);
+    const tot = R.durata_base + (R.recupero || 0);
+    if (!R.chiuso && !confirm(`Fine gara: ${fatti()} - ${R.gol_subiti}, durata ${tot}'. Inviare il referto al PC?`)) return;
+    R.chiuso = true;
+    const ok = await inviaReferto(R);
+    if (S.partita?.gid === id) S.partita = null;     // torna la chiusura automatica
+    toast(ok ? "Referto inviato: il PC lo applicherà all'apertura dell'app." : "Referto chiuso: parte da solo appena possibile.", !ok);
+    disegna();
+  };
   disegna();
   window.scrollTo(0, 0);
 }
@@ -869,7 +1173,8 @@ async function disegnaReport(E) {
 let nascostaDal = 0;
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) { nascostaDal = Date.now(); return; }
-  if (S.D && nascostaDal && Date.now() - nascostaDal > BLOCCO_MINUTI * 60000) {
+  const inPartita = S.partita && Date.now() - S.partita.inizio < 4 * 3600000;
+  if (S.D && !inPartita && nascostaDal && Date.now() - nascostaDal > BLOCCO_MINUTI * 60000) {
     azzera();
     schermataAccesso("Per sicurezza i dati sono stati richiusi: accedi di nuovo.");
   }
