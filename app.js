@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.4";
+const VERSIONE = "1.5";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -21,7 +21,7 @@ const BLOCCO_MINUTI = 5;          // in background per più di 5 minuti: si rich
 /* ---------- utilità ---------- */
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","presenze":"<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8\"/>","elimina":"<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>","maglia":"<path d=\"M8 3 3 6l2 5 3-1v11h8V10l3 1 2-5-5-3a4 4 0 0 1-8 0Z\"/>","bersaglio":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>","fischietto":"<path d=\"M3 11a5 5 0 0 0 9.5 2.2L21 11V7H8a5 5 0 0 0-5 4Z\"/><circle cx=\"8\" cy=\"12\" r=\"1.5\"/><path d=\"M14 7V4\"/>","cambio":"<path d=\"M7 4v13M3.5 13.5 7 17l3.5-3.5M17 20V7M13.5 10.5 17 7l3.5 3.5\"/>","gialla":"<rect x=\"7\" y=\"3.5\" width=\"10\" height=\"17\" rx=\"1.5\" fill=\"#F2C230\" stroke=\"#B8901A\"/>","rossa":"<rect x=\"7\" y=\"3.5\" width=\"10\" height=\"17\" rx=\"1.5\" fill=\"#D23C3C\" stroke=\"#9E2424\"/>","prec":"<path d=\"M15 6l-6 6 6 6\"/>","succ":"<path d=\"M9 6l6 6-6 6\"/>","alfa":"<path d=\"M4 17 7.5 7l3.5 10M5.2 13.5h4.6M14 7h6l-6 10h6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
+const ICO = {"home":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h14V10\"/>","palla":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m12 7.5 4 3-1.5 4.5h-5L8 10.5Z\"/>","coppa":"<path d=\"M8 4h8v5a4 4 0 0 1-8 0Z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>","amichevole":"<path d=\"m3 11 4-4 3 2 2-1 3 1 6 5-3 3\"/><path d=\"m7 7-4 4 3 3M10 14l2 2M12 12l3 3M14 10l3 3\"/>","calendario":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2\"/><path d=\"M3.5 10h17M8 3v4M16 3v4\"/>","torta":"<path d=\"M4 20h16v-7H4Z\"/><path d=\"M4 15.5c2 1.5 4 1.5 5.3 0s4-1.5 5.4 0 4 1.5 5.3 0M8 13v-3M12 13v-3M16 13v-3M8 7.5v-.01M12 7.5v-.01M16 7.5v-.01\"/>","salva":"<path d=\"M5 4h11l3 3v13H5Z\"/><path d=\"M8 4v5h7V4M8 20v-6h8v6\"/>","indietro":"<path d=\"M19 12H5M11 6l-6 6 6 6\"/>","sblocca":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 7.5-2\"/>","nuvola":"<path d=\"M7 18a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18Z\"/>","nuvolaGiu":"<path d=\"M7 17a5 5 0 0 1-.8-9.9A6 6 0 0 1 17.7 8 4.5 4.5 0 0 1 17.5 17\"/><path d=\"M12 11v9M8.5 16.5 12 20l3.5-3.5\"/>","orologio":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","avviso":"<path d=\"M12 3 2 20h20Z\"/><path d=\"M12 9v5M12 17v.01\"/>","fatto":"<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>","chiudi":"<path d=\"M6 6l12 12M18 6 6 18\"/>","piu":"<path d=\"M12 5v14M5 12h14\"/>","casa":"<path d=\"M3 11 12 3l9 8\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>","trasferta":"<path d=\"M3 16V9l3-4h9l3 4h3v7\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6M3 11h18\"/>","report":"<path d=\"M6 3h9l4 4v14H6Z\"/><path d=\"M14 3v5h5M9 12h7M9 15.5h7M9 19h4\"/>","staff":"<circle cx=\"12\" cy=\"7\" r=\"3.5\"/><path d=\"M5 21v-2a7 7 0 0 1 14 0v2\"/><path d=\"m10.5 13 1.5 3 1.5-3\"/>","inf":"<path d=\"M12 4v16M4 12h16\"/>","sq":"<path d=\"M6 6l12 12M18 6 6 18\"/>","ass":"<path d=\"M5 12h14\"/>","lucchetto":"<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>","aggiorna":"<path d=\"M20 12a8 8 0 1 1-2.3-5.6\"/><path d=\"M20 4v5h-5\"/>","cerca":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"m16 16 4.5 4.5\"/>","immagine":"<rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"1.8\"/><path d=\"m20.5 16-5-5-9 8.5\"/>","condividi":"<circle cx=\"18\" cy=\"5.5\" r=\"2.5\"/><circle cx=\"6\" cy=\"12\" r=\"2.5\"/><circle cx=\"18\" cy=\"18.5\" r=\"2.5\"/><path d=\"m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1\"/>","scarica":"<path d=\"M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14\"/>","canc":"<path d=\"M9 5h11v14H9l-6-7Z\"/><path d=\"m12 9 5 6M17 9l-5 6\"/>","presenze":"<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8\"/>","elimina":"<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>","maglia":"<path d=\"M8 3 3 6l2 5 3-1v11h8V10l3 1 2-5-5-3a4 4 0 0 1-8 0Z\"/>","bersaglio":"<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>","fischietto":"<path d=\"M3 11a5 5 0 0 0 9.5 2.2L21 11V7H8a5 5 0 0 0-5 4Z\"/><circle cx=\"8\" cy=\"12\" r=\"1.5\"/><path d=\"M14 7V4\"/>","cambio":"<path d=\"M7 4v13M3.5 13.5 7 17l3.5-3.5M17 20V7M13.5 10.5 17 7l3.5 3.5\"/>","gialla":"<rect x=\"7\" y=\"3.5\" width=\"10\" height=\"17\" rx=\"1.5\" fill=\"#F2C230\" stroke=\"#B8901A\"/>","rossa":"<rect x=\"7\" y=\"3.5\" width=\"10\" height=\"17\" rx=\"1.5\" fill=\"#D23C3C\" stroke=\"#9E2424\"/>","grafico":"<path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/>","prec":"<path d=\"M15 6l-6 6 6 6\"/>","succ":"<path d=\"M9 6l6 6-6 6\"/>","alfa":"<path d=\"M4 17 7.5 7l3.5 10M5.2 13.5h4.6M14 7h6l-6 10h6\"/>","persone":"<circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 20v-1.5a6 6 0 0 1 12 0V20\"/><path d=\"M16 4.6a3.3 3.3 0 0 1 0 6.6M21 20v-1.5a6 6 0 0 0-3.5-5.5\"/>"};
 const ico = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICO[n] || ""}</svg>`;
 const GIORNI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
 const GG = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
@@ -377,7 +377,8 @@ function vaiHome() {
       <span class="dx"><span class="bd ${n ? "" : "mute"}" style="${n ? "background:var(--accent)" : ""}">${n}</span><small>conv.</small></span>
     </button>`;
   };
-  app().innerHTML = testata(D.stagione.squadra, "Stagione " + D.stagione.nome, "", `<button class="ib" id="bEsci" aria-label="Chiudi e blocca">${ico("lucchetto")}</button>`) + `
+  app().innerHTML = testata(D.stagione.squadra, "Stagione " + D.stagione.nome, "",
+    `${D.stat ? `<button class="ib" id="bStat" aria-label="Statistiche">${ico("grafico")}</button>` : ""}<button class="ib" id="bEsci" aria-label="Chiudi e blocca">${ico("lucchetto")}</button>`) + `
     <section class="pag">
       ${cmp.length ? `<h2 class="sez">${ico("torta")} Compleanni <span class="n">prossimi 7 giorni</span></h2><div class="card">${cmp.map(rigaCmp).join("")}</div>` : ""}
       <h2 class="sez">${ico("calendario")} Gare in programma <span class="sp"></span><span class="n">${future.length}</span></h2>
@@ -390,6 +391,7 @@ function vaiHome() {
     </section>
     <nav class="barra"><button class="btn verde" id="bPres">${ico("presenze")} Presenze</button><button class="btn pri" id="bNuova">${ico("piu")} Nuova gara</button></nav>`;
   $("bEsci").onclick = () => { azzera(); schermataAccesso(); };
+  if ($("bStat")) $("bStat").onclick = () => apriStat();
   $("bNuova").onclick = () => apriGara(null);
   $("bPres").onclick = () => apriCalendario();
   app().querySelectorAll("[data-pd]").forEach((b) => (b.onclick = () => apriPresenze(b.dataset.pd)));
@@ -865,6 +867,84 @@ async function riaccedi() {
   toast("L'accesso a Google è scaduto: accedi di nuovo e poi ripeti l'operazione.", true);
   try { await chiediToken(); toast("Accesso rinnovato: ripeti l'operazione."); }
   catch (e) { toast(e.message, true); }
+}
+
+/* ============================================================
+   DASHBOARD LITE: risultati, classifiche, presenze per mese, giocatori.
+   Sola lettura: i totali li calcola il PC (stessi numeri della sua Dashboard).
+   ============================================================ */
+const MESI_L = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+const fmt1 = (x, d = 1) => (Math.round(x * 10 ** d) / 10 ** d).toFixed(d).replace(".", ",");
+const esitoG = (g) => !g.ref || g.gf == null || g.gs == null ? null : g.gf > g.gs ? "V" : g.gf < g.gs ? "P" : "N";
+let statTab = "gare";
+
+function apriStat(tab = statTab) {
+  S.vista = "stat"; statTab = tab;
+  const T = S.D.stat, gio = T.giocatori.map((x) => ({ ...x, p: persona(x.id) })).filter((x) => x.p);
+  const tabs = [["gare", "palla", "Gare"], ["class", "coppa", "Classifiche"], ["pres", "presenze", "Presenze"], ["gioc", "persone", "Giocatori"]];
+  let corpo = "";
+  if (tab === "gare") {
+    const L = T.gare, con = L.filter(esitoG);
+    const c = (e) => con.filter((g) => esitoG(g) === e).length;
+    corpo = `<div class="card">
+        <div class="forma">${con.length ? con.map((g) => `<span class="fq ${esitoG(g)}" title="${esc(dmy(g.data) + " " + (g.avv || ""))}">${esitoG(g)}</span>`).join("") : `<span class="muted">Nessuna gara con il referto</span>`}</div>
+        ${con.length ? `<div class="riep" style="margin:10px 0 0"><span><b style="color:var(--ok)">${c("V")}V</b> <b style="color:var(--inf)">${c("N")}N</b> <b style="color:var(--sq)">${c("P")}P</b>
+          · gol ${con.reduce((t, g) => t + g.gf, 0)}–${con.reduce((t, g) => t + g.gs, 0)}</span></div>` : ""}</div>
+      ${L.length ? `<div class="lista">${L.slice().reverse().map((g) => { const e = esitoG(g); return `<div class="rgara ${g.conta ? "" : "no"}">
+        <span class="d"><b>${dmy(g.data)}</b><small>${GG[dataDa(g.data).getDay()]}</small></span>
+        <span class="a"><b>${esc(g.avv || "–")}</b><small>${g.ct === "T" ? "trasferta" : g.ct === "C" ? "casa" : ""}${g.ct ? " · " : ""}${esc(COMP[g.comp]?.[1] || "")}${g.conta ? "" : " · non conteggiata"}</small></span>
+        ${e ? `<span class="ris ${e}">${g.gf}–${g.gs}</span>` : `<span class="ris">–</span>`}</div>`; }).join("")}</div>` : `<div class="vuoto">Nessuna gara giocata.</div>`}`;
+  } else if (tab === "class") {
+    const cat = [["Presenze allenamento", (x) => x.pp, (x) => fmt1(x.pp, 0) + "%"], ["Ultimi 9 allenamenti", (x) => x.ult, (x) => x.ult + "%"],
+      ["Più titolari", (x) => x.tit, (x) => `${x.tit}/${T.nG}`], ["Minuti giocati", (x) => x.min, (x) => x.min + "'"],
+      ["Marcatori", (x) => x.gol, (x) => x.gol], ["Più ammoniti", (x) => x.amm * 10 + x.esp * 30, (x) => `${x.amm}<i class="yc"></i>${x.esp ? ` ${x.esp}<i class="rc"></i>` : ""}`]];
+    corpo = cat.map(([t, f, v], i) => {
+      const L = gio.slice().sort((a, b) => f(b) - f(a) || a.p.cognome.localeCompare(b.p.cognome)).filter((x) => f(x) > 0);
+      return `<div class="card ccl"><h3>${t}</h3>${L.length ? `<div class="ccll">${L.map((x, k) => `<div class="rk ${k >= 5 ? "oltre" : ""}"><span class="n">${k + 1}</span><span class="t"><b>${esc(x.p.cognome)}</b> ${esc(x.p.nome[0] || "")}.</span><b>${v(x)}</b></div>`).join("")}</div>
+        ${L.length > 5 ? `<button class="btn tutti" data-tutti="${i}">Mostra tutti (${L.length})</button>` : ""}` : `<p class="muted" style="margin:0">— ancora nessuno —</p>`}</div>`;
+    }).join("");
+  } else if (tab === "pres") {
+    corpo = `<div class="card kpi3"><div><b>${T.nAll}</b><small>allenamenti</small></div><div><b>${fmt1(T.media)}</b><small>media presenti su ${T.rosa}</small></div><div><b>${fmt1(T.perc)}%</b><small>presenza di squadra</small></div></div>
+      ${T.mesi.length ? `<div class="lista">${T.mesi.slice().reverse().map((m) => { const [y, mo] = m.m.split("-"); return `<div class="rmese">
+        <span class="mn"><b>${MESI_L[mo - 1]}</b><small>${y} · ${m.all} allenament${m.all === 1 ? "o" : "i"}</small></span>
+        <span class="mb"><span class="bar"><i style="width:${Math.min(100, m.perc)}%"></i></span><small>${fmt1(m.perc, 0)}%</small></span>
+        <span class="mv"><b>${fmt1(m.media)}</b><small>media</small></span></div>`; }).join("")}</div>` : `<div class="vuoto">Nessun allenamento.</div>`}`;
+  } else {
+    const L = gio.slice().sort((a, b) => REP_ORD.indexOf(a.p.reparto) - REP_ORD.indexOf(b.p.reparto) || a.p.cognome.localeCompare(b.p.cognome));
+    corpo = `<div class="lista">${L.map((x) => `<button class="riga" data-sg="${x.id}">${badgeRep(x.p, "sm")}
+      <span class="nome"><b>${esc(x.p.cognome)}</b> ${esc(x.p.nome)}<small>${esc(x.p.ruolo || "")}</small></span>
+      <span class="ext"><span class="pct">${fmt1(x.pp, 0)}%</span>${ico("succ")}</span></button>`).join("")}</div>`;
+  }
+  app().innerHTML = testata("Statistiche", `Stagione ${S.D.stagione.nome} · dati del ${dataIt(S.D.creato)}`, `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+    <section class="pag"><div class="tabs"><div class="seg st4">${tabs.map(([k, ic, l]) => `<button data-st="${k}" class="${k === tab ? "on" : ""}">${ico(ic)}<span>${l}</span></button>`).join("")}</div></div>
+      ${corpo}<p class="piede">Giocatori della rosa, tutte le competizioni · gare e presenze fino all'ultimo aggiornamento del PC</p></section>`;
+  $("bInd").onclick = vaiHome;
+  app().querySelectorAll("[data-st]").forEach((b) => (b.onclick = () => { apriStat(b.dataset.st); window.scrollTo(0, 0); }));
+  app().querySelectorAll("[data-tutti]").forEach((b) => (b.onclick = () => { b.previousElementSibling.classList.add("aperta"); b.remove(); }));
+  app().querySelectorAll("[data-sg]").forEach((b) => (b.onclick = () => schedaStat(+b.dataset.sg)));
+}
+const dmy = (iso) => dataIt(iso).slice(0, 5);
+
+function schedaStat(id) {
+  S.vista = "stat";
+  const T = S.D.stat, x = T.giocatori.find((g) => g.id === id), p = persona(id);
+  if (!x || !p) return apriStat("gioc");
+  const tile = (v, l) => `<div class="stile"><b>${v}</b><small>${l}</small></div>`;
+  app().innerHTML = testata(`${p.cognome} ${p.nome}`, `${p.ruolo || ""}${p.nascita ? " · " + etaA(p.nascita, isoOggi()) + " anni" : ""}`, `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
+    <section class="pag">
+      <div class="stiles">
+        ${tile(fmt1(x.pp, 0) + "%", `presenze (${x.pres}/${T.nAll})`)}${tile(x.ult + "%", "ultimi 9 allenamenti")}
+        ${tile(`${x.conv}/${T.nG}`, "convocazioni")}${tile(x.tit, "da titolare")}${tile(x.panc, "in panchina")}
+        ${tile(x.min + "'", "minuti giocati")}${tile(x.gol, "gol")}${tile(`${x.amm}<i class="yc"></i> ${x.esp}<i class="rc"></i>`, "ammonizioni · espulsioni")}
+      </div>
+      <h2 class="sez">${ico("presenze")} Presenze per mese</h2>
+      ${T.mesi.length ? `<div class="lista">${T.mesi.slice().reverse().map((m) => { const i = T.mesi.indexOf(m), n = x.pm[i] || 0, pc = m.all ? (n / m.all) * 100 : 0, [y, mo] = m.m.split("-"); return `<div class="rmese">
+        <span class="mn"><b>${MESI_L[mo - 1]}</b><small>${y}</small></span>
+        <span class="mb"><span class="bar"><i style="width:${pc}%"></i></span><small>${fmt1(pc, 0)}% · squadra ${fmt1(m.perc, 0)}%</small></span>
+        <span class="mv"><b>${n}/${m.all}</b><small>presenze</small></span></div>`; }).join("")}</div>` : `<div class="vuoto">Nessun allenamento.</div>`}
+    </section>`;
+  $("bInd").onclick = () => apriStat("gioc");
+  window.scrollTo(0, 0);
 }
 
 /* ============================================================
