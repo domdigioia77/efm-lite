@@ -334,3 +334,7 @@ i.yc{background:#F2C230}i.rc{background:#D23C3C}
 .stile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .stile b{display:block;font:700 28px "Barlow Condensed",Barlow,sans-serif}
 .stile small{color:var(--muted);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.chip{min-height:38px;padding:0 14px;border-radius:20px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);font:600 14.5px Barlow,sans-serif;cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip:focus-visible{outline:3px solid var(--giallo);outline-offset:2px}

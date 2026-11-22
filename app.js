@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.5";
+const VERSIONE = "1.6";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -391,7 +391,7 @@ function vaiHome() {
     </section>
     <nav class="barra"><button class="btn verde" id="bPres">${ico("presenze")} Presenze</button><button class="btn pri" id="bNuova">${ico("piu")} Nuova gara</button></nav>`;
   $("bEsci").onclick = () => { azzera(); schermataAccesso(); };
-  if ($("bStat")) $("bStat").onclick = () => apriStat();
+  if ($("bStat")) $("bStat").onclick = () => { statComp = ""; statApp = new Set(["ROSA"]); apriStat("gare"); };
   $("bNuova").onclick = () => apriGara(null);
   $("bPres").onclick = () => apriCalendario();
   app().querySelectorAll("[data-pd]").forEach((b) => (b.onclick = () => apriPresenze(b.dataset.pd)));
@@ -876,20 +876,26 @@ async function riaccedi() {
 const MESI_L = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 const fmt1 = (x, d = 1) => (Math.round(x * 10 ** d) / 10 ** d).toFixed(d).replace(".", ",");
 const esitoG = (g) => !g.ref || g.gf == null || g.gs == null ? null : g.gf > g.gs ? "V" : g.gf < g.gs ? "P" : "N";
-let statTab = "gare";
+let statTab = "gare", statComp = "", statApp = new Set(["ROSA"]);
+const APP_F = [["ROSA", "Rosa"], ["FUORI_ROSA", "Fuori rosa"], ["USCITO", "Usciti"]];
+const filtroApp = () => `<div class="chips" role="group" aria-label="Chi mostrare">${APP_F.map(([k, l]) => `<button class="chip ${statApp.has(k) ? "on" : ""}" data-fa="${k}" aria-pressed="${statApp.has(k)}">${l}</button>`).join("")}</div>`;
 
 function apriStat(tab = statTab) {
   S.vista = "stat"; statTab = tab;
-  const T = S.D.stat, gio = T.giocatori.map((x) => ({ ...x, p: persona(x.id) })).filter((x) => x.p);
+  const T = S.D.stat, gio = T.giocatori.map((x) => ({ ...x, app: x.app || "ROSA", p: x.cognome ? x : persona(x.id) })).filter((x) => x.p);
+  const scelti = gio.filter((x) => statApp.has(x.app));
   const tabs = [["gare", "palla", "Gare"], ["class", "coppa", "Classifiche"], ["pres", "presenze", "Presenze"], ["gioc", "persone", "Giocatori"]];
   let corpo = "";
   if (tab === "gare") {
-    const L = T.gare, con = L.filter(esitoG);
+    const L = T.gare.filter((g) => !statComp || g.comp === statComp), con = L.filter(esitoG);
     const c = (e) => con.filter((g) => esitoG(g) === e).length;
     corpo = `<div class="card">
         <div class="forma">${con.length ? con.map((g) => `<span class="fq ${esitoG(g)}" title="${esc(dmy(g.data) + " " + (g.avv || ""))}">${esitoG(g)}</span>`).join("") : `<span class="muted">Nessuna gara con il referto</span>`}</div>
         ${con.length ? `<div class="riep" style="margin:10px 0 0"><span><b style="color:var(--ok)">${c("V")}V</b> <b style="color:var(--inf)">${c("N")}N</b> <b style="color:var(--sq)">${c("P")}P</b>
           · gol ${con.reduce((t, g) => t + g.gf, 0)}–${con.reduce((t, g) => t + g.gs, 0)}</span></div>` : ""}</div>
+      <div class="chips" role="group" aria-label="Competizione">${[["", "Tutte"], ["CAMP", "Campionato"], ["COPPA", "Coppa"], ["AMI", "Amichevole"]].map(([k, l]) =>
+        `<button class="chip ${statComp === k ? "on" : ""}" data-fc="${k}" aria-pressed="${statComp === k}">${l}</button>`).join("")}</div>
+      ${!L.length && T.gare.length ? `<div class="vuoto">Nessuna gara di questo tipo.</div>` : ""}
       ${L.length ? `<div class="lista">${L.slice().reverse().map((g) => { const e = esitoG(g); return `<div class="rgara ${g.conta ? "" : "no"}">
         <span class="d"><b>${dmy(g.data)}</b><small>${GG[dataDa(g.data).getDay()]}</small></span>
         <span class="a"><b>${esc(g.avv || "–")}</b><small>${g.ct === "T" ? "trasferta" : g.ct === "C" ? "casa" : ""}${g.ct ? " · " : ""}${esc(COMP[g.comp]?.[1] || "")}${g.conta ? "" : " · non conteggiata"}</small></span>
@@ -899,41 +905,54 @@ function apriStat(tab = statTab) {
       ["Più titolari", (x) => x.tit, (x) => `${x.tit}/${T.nG}`], ["Minuti giocati", (x) => x.min, (x) => x.min + "'"],
       ["Marcatori", (x) => x.gol, (x) => x.gol], ["Più ammoniti", (x) => x.amm * 10 + x.esp * 30, (x) => `${x.amm}<i class="yc"></i>${x.esp ? ` ${x.esp}<i class="rc"></i>` : ""}`]];
     corpo = cat.map(([t, f, v], i) => {
-      const L = gio.slice().sort((a, b) => f(b) - f(a) || a.p.cognome.localeCompare(b.p.cognome)).filter((x) => f(x) > 0);
+      const L = gio.filter((x) => x.app === "ROSA").sort((a, b) => f(b) - f(a) || a.p.cognome.localeCompare(b.p.cognome)).filter((x) => f(x) > 0);
       return `<div class="card ccl"><h3>${t}</h3>${L.length ? `<div class="ccll">${L.map((x, k) => `<div class="rk ${k >= 5 ? "oltre" : ""}"><span class="n">${k + 1}</span><span class="t"><b>${esc(x.p.cognome)}</b> ${esc(x.p.nome[0] || "")}.</span><b>${v(x)}</b></div>`).join("")}</div>
-        ${L.length > 5 ? `<button class="btn tutti" data-tutti="${i}">Mostra tutti (${L.length})</button>` : ""}` : `<p class="muted" style="margin:0">— ancora nessuno —</p>`}</div>`;
+        ${L.length > 5 ? `<button class="btn tutti" data-tutti="${L.length}" aria-expanded="false">Mostra tutti (${L.length})</button>` : ""}` : `<p class="muted" style="margin:0">— ancora nessuno —</p>`}</div>`;
     }).join("");
   } else if (tab === "pres") {
-    corpo = `<div class="card kpi3"><div><b>${T.nAll}</b><small>allenamenti</small></div><div><b>${fmt1(T.media)}</b><small>media presenti su ${T.rosa}</small></div><div><b>${fmt1(T.perc)}%</b><small>presenza di squadra</small></div></div>
-      ${T.mesi.length ? `<div class="lista">${T.mesi.slice().reverse().map((m) => { const [y, mo] = m.m.split("-"); return `<div class="rmese">
+    const presTot = scelti.reduce((t, x) => t + x.pres, 0), possTot = scelti.reduce((t, x) => t + (x.poss ?? T.nAll), 0);
+    const mesi = T.mesi.map((m, i) => { const n = scelti.reduce((t, x) => t + (x.pm[i] || 0), 0); return { ...m, media: m.all ? n / m.all : 0, perc: m.all && scelti.length ? (n / (m.all * scelti.length)) * 100 : 0 }; });
+    corpo = filtroApp() + `<div class="card kpi3"><div><b>${T.nAll}</b><small>allenamenti</small></div><div><b>${fmt1(T.nAll ? presTot / T.nAll : 0)}</b><small>media presenti su ${scelti.length}</small></div><div><b>${fmt1(possTot ? (presTot / possTot) * 100 : 0)}%</b><small>presenza</small></div></div>
+      ${mesi.length ? `<div class="lista">${mesi.slice().reverse().map((m) => { const [y, mo] = m.m.split("-"); return `<div class="rmese">
         <span class="mn"><b>${MESI_L[mo - 1]}</b><small>${y} · ${m.all} allenament${m.all === 1 ? "o" : "i"}</small></span>
         <span class="mb"><span class="bar"><i style="width:${Math.min(100, m.perc)}%"></i></span><small>${fmt1(m.perc, 0)}%</small></span>
         <span class="mv"><b>${fmt1(m.media)}</b><small>media</small></span></div>`; }).join("")}</div>` : `<div class="vuoto">Nessun allenamento.</div>`}`;
   } else {
-    const L = gio.slice().sort((a, b) => REP_ORD.indexOf(a.p.reparto) - REP_ORD.indexOf(b.p.reparto) || a.p.cognome.localeCompare(b.p.cognome));
-    corpo = `<div class="lista">${L.map((x) => `<button class="riga" data-sg="${x.id}">${badgeRep(x.p, "sm")}
-      <span class="nome"><b>${esc(x.p.cognome)}</b> ${esc(x.p.nome)}<small>${esc(x.p.ruolo || "")}</small></span>
-      <span class="ext"><span class="pct">${fmt1(x.pp, 0)}%</span>${ico("succ")}</span></button>`).join("")}</div>`;
+    const L = scelti.slice().sort((a, b) => REP_ORD.indexOf(a.p.reparto) - REP_ORD.indexOf(b.p.reparto) || a.p.cognome.localeCompare(b.p.cognome));
+    corpo = filtroApp() + (L.length ? `<div class="lista">${L.map((x) => `<button class="riga" data-sg="${x.id}">${badgeRep(x.p, "sm")}
+      <span class="nome"><b>${esc(x.p.cognome)}</b> ${esc(x.p.nome)}<small>${esc(x.p.ruolo || "")}${x.app === "FUORI_ROSA" ? " · fuori rosa" + (x.categoria ? " " + esc(x.categoria) : "") : x.app === "USCITO" ? " · uscito" + (x.uscita ? " il " + dataIt(x.uscita) : "") : ""}</small></span>
+      <span class="ext"><span class="pct">${fmt1(x.pp, 0)}%</span>${ico("succ")}</span></button>`).join("")}</div>` : `<div class="vuoto">Nessun giocatore con questi filtri.</div>`);
   }
   app().innerHTML = testata("Statistiche", `Stagione ${S.D.stagione.nome} · dati del ${dataIt(S.D.creato)}`, `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
     <section class="pag"><div class="tabs"><div class="seg st4">${tabs.map(([k, ic, l]) => `<button data-st="${k}" class="${k === tab ? "on" : ""}">${ico(ic)}<span>${l}</span></button>`).join("")}</div></div>
-      ${corpo}<p class="piede">Giocatori della rosa, tutte le competizioni · gare e presenze fino all'ultimo aggiornamento del PC</p></section>`;
+      ${corpo}<p class="piede">${tab === "class" ? "Giocatori della rosa, tutte le competizioni" : tab === "gare" ? "Gare giocate fino all'ultimo aggiornamento del PC" : "Presenze fino all'ultimo aggiornamento del PC"}</p></section>`;
   $("bInd").onclick = vaiHome;
   app().querySelectorAll("[data-st]").forEach((b) => (b.onclick = () => { apriStat(b.dataset.st); window.scrollTo(0, 0); }));
-  app().querySelectorAll("[data-tutti]").forEach((b) => (b.onclick = () => { b.previousElementSibling.classList.add("aperta"); b.remove(); }));
+  app().querySelectorAll("[data-tutti]").forEach((b) => (b.onclick = () => {
+    const ap = b.previousElementSibling.classList.toggle("aperta");
+    b.textContent = ap ? "Chiudi" : `Mostra tutti (${b.dataset.tutti})`;
+    b.setAttribute("aria-expanded", ap);
+    if (!ap) b.closest(".ccl").scrollIntoView({ block: "nearest" });
+  }));
+  app().querySelectorAll("[data-fc]").forEach((b) => (b.onclick = () => { statComp = b.dataset.fc; apriStat("gare"); }));
+  app().querySelectorAll("[data-fa]").forEach((b) => (b.onclick = () => {
+    const k = b.dataset.fa;
+    if (statApp.has(k)) { if (statApp.size === 1) return toast("Lascia almeno un gruppo acceso.", true); statApp.delete(k); } else statApp.add(k);
+    const y = window.scrollY; apriStat(tab); window.scrollTo(0, y);
+  }));
   app().querySelectorAll("[data-sg]").forEach((b) => (b.onclick = () => schedaStat(+b.dataset.sg)));
 }
 const dmy = (iso) => dataIt(iso).slice(0, 5);
 
 function schedaStat(id) {
   S.vista = "stat";
-  const T = S.D.stat, x = T.giocatori.find((g) => g.id === id), p = persona(id);
+  const T = S.D.stat, x = T.giocatori.find((g) => g.id === id), p = x?.cognome ? x : persona(id);
   if (!x || !p) return apriStat("gioc");
   const tile = (v, l) => `<div class="stile"><b>${v}</b><small>${l}</small></div>`;
   app().innerHTML = testata(`${p.cognome} ${p.nome}`, `${p.ruolo || ""}${p.nascita ? " · " + etaA(p.nascita, isoOggi()) + " anni" : ""}`, `<button class="ib" id="bInd" aria-label="Indietro">${ico("indietro")}</button>`) + `
     <section class="pag">
       <div class="stiles">
-        ${tile(fmt1(x.pp, 0) + "%", `presenze (${x.pres}/${T.nAll})`)}${tile(x.ult + "%", "ultimi 9 allenamenti")}
+        ${tile(fmt1(x.pp, 0) + "%", `presenze (${x.pres}/${x.poss ?? T.nAll})`)}${tile(x.ult + "%", "ultimi 9 allenamenti")}
         ${tile(`${x.conv}/${T.nG}`, "convocazioni")}${tile(x.tit, "da titolare")}${tile(x.panc, "in panchina")}
         ${tile(x.min + "'", "minuti giocati")}${tile(x.gol, "gol")}${tile(`${x.amm}<i class="yc"></i> ${x.esp}<i class="rc"></i>`, "ammonizioni · espulsioni")}
       </div>
