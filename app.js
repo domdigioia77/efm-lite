@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.3";
+const VERSIONE = "1.4";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -64,7 +64,7 @@ function toast(msg, err = false) {
 let S = null;
 function azzera() {
   if (S?.chiave) try { sodium.memzero(S.chiave); } catch (e) { /* già azzerata */ }
-  S = { token: null, scade: 0, lite: null, bin: null, sale: null, chiave: null, D: null, pend: {}, ref: {}, partita: null, modello: "", errori: 0, attesa: 0, vista: null };
+  S = { disp: S?.disp || null, token: null, scade: 0, lite: null, bin: null, sale: null, chiave: null, D: null, pend: {}, ref: {}, partita: null, modello: "", errori: 0, attesa: 0, vista: null };
 }
 azzera();
 
@@ -259,7 +259,16 @@ function schermataPin(err = "") {
     try {
       S.D = JSON.parse(testo);
     } catch (e) { schermataAccesso("I dati scaricati non sono leggibili."); return; }
+    S.disp = idDispositivo();
+    if ((S.D.bloccati || []).includes(S.disp)) {
+      azzera();
+      app().innerHTML = `<section class="accesso">${icona}<h1>EFM <em>Lite</em></h1>
+        <div class="err" role="alert">Questo telefono è stato <b>bloccato</b> dall'app del PC: i dati non si possono aprire qui.</div>
+        <p>Se è un errore, sbloccalo dal PC in Impostazioni › Telefono.</p></section>`;
+      return;
+    }
     await caricaInAttesa();
+    segnaAccesso();
     vaiHome();
   };
   const mostraErr = (m) => { const e = $("pinErr"); e.className = "err"; e.textContent = m; e.hidden = false; };
@@ -278,6 +287,26 @@ function schermataPin(err = "") {
     else if (e.key === "Enter") conferma();
   };
   disegna();
+}
+
+/**
+ * Codice del telefono, scelto a caso la prima volta: serve solo al PC per riconoscere i telefoni
+ * (Impostazioni › Telefono) e, se serve, bloccarli. È l'unica cosa che resta sul telefono e non contiene dati.
+ */
+function idDispositivo() {
+  const nuovo = () => Array.from(sodium.randombytes_buf(16), (x) => x.toString(16).padStart(2, "0")).join("");
+  try {
+    let id = localStorage.getItem("efm_dispositivo");
+    if (!/^[a-f0-9]{32}$/.test(id || "")) { id = nuovo(); localStorage.setItem("efm_dispositivo", id); }
+    return id;
+  } catch (e) { return S.disp || nuovo(); }
+}
+/** Avvisa il PC dell'apertura (piccolo file cifrato, il PC lo legge e lo toglie). */
+async function segnaAccesso() {
+  const nome = TEL_PREF + "d" + S.disp + ".efm";
+  const p = { v: 1, tipo: "accesso", telefono: S.modello, dispositivo: S.disp, creato: new Date().toISOString(), versione: VERSIONE };
+  try { const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), S.pend[nome]?.id); S.pend[nome] = { id: r.id, p }; }
+  catch (e) { /* non indispensabile */ }
 }
 
 /** Le gare salvate dal telefono e non ancora prese dal PC: si vedono come le ha lasciate il telefono. */
@@ -628,7 +657,7 @@ function apriGara(g, vistaIniziale = null) {
     try {
       const nome = nomeFile(E);
       const p = {
-        v: 1, tipo: "gara", telefono: S.modello, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
+        v: 1, tipo: "gara", telefono: S.modello, dispositivo: S.disp, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
         uid: E.id ? null : E.uid,
         gara: { id: E.id || null, data: E.data, avversario: E.avversario, campo: E.campo, ora_presentazione: E.ora_presentazione, ora_inizio: E.ora_inizio,
                 casa_trasferta: E.casa_trasferta, competizione: E.competizione, convocati: E.convocati, compiti: E.compiti, durata: E.durata },
@@ -692,7 +721,7 @@ function erroriReferto(R, G) {
 let invioRef = null;   // invio del referto in attesa (rete assente o accesso scaduto)
 async function inviaReferto(R, silenzioso = false) {
   const nome = fileR(R.gara_id);
-  const p = { v: 1, tipo: "referto", telefono: S.modello, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
+  const p = { v: 1, tipo: "referto", telefono: S.modello, dispositivo: S.disp, creato: new Date().toISOString(), stagione_id: S.D.stagione.id,
     gara_id: R.gara_id, chiuso: !!R.chiuso, gol_subiti: R.gol_subiti, durata: R.durata_base + (R.recupero || 0),
     durata_base: R.durata_base, recupero: R.recupero || 0, eventi: R.eventi };
   try {
@@ -980,7 +1009,7 @@ function apriPresenze(data, sposta = null) {
     b.disabled = true; b.innerHTML = `<span class="giro"></span> Invio…`;
     try {
       const nome = fileP(data);
-      const p = { v: 1, tipo: "presenze", telefono: S.modello, creato: new Date().toISOString(), stagione_id: S.D.stagione.id, data, presenti: [...sel].sort((a, b) => a - b) };
+      const p = { v: 1, tipo: "presenze", telefono: S.modello, dispositivo: S.disp, creato: new Date().toISOString(), stagione_id: S.D.stagione.id, data, presenti: [...sel].sort((a, b) => a - b) };
       const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), S.pend[nome]?.id);
       S.pend[nome] = { id: r.id || S.pend[nome]?.id, p };
       salvata = true;
