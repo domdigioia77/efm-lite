@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.6";
+const VERSIONE = "1.7";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -304,7 +304,11 @@ function idDispositivo() {
 /** Avvisa il PC dell'apertura (piccolo file cifrato, il PC lo legge e lo toglie). */
 async function segnaAccesso() {
   const nome = TEL_PREF + "d" + S.disp + ".efm";
-  const p = { v: 1, tipo: "accesso", telefono: S.modello, dispositivo: S.disp, creato: new Date().toISOString(), versione: VERSIONE };
+  // chiede al telefono di non cancellare mai da solo lo spazio di EFM Lite (pulizie e "Ottimizza"):
+  // così il codice del telefono resta lo stesso e il PC non lo vede come un telefono nuovo
+  let protetto = null;
+  try { if (navigator.storage?.persist) protetto = (await navigator.storage.persisted()) || (await navigator.storage.persist()); } catch (e) { /* non indispensabile */ }
+  const p = { v: 1, tipo: "accesso", telefono: S.modello, dispositivo: S.disp, creato: new Date().toISOString(), versione: VERSIONE, protetto };
   try { const r = await carica(nome, S.lite.parents[0], chiudiFile(JSON.stringify(p)), S.pend[nome]?.id); S.pend[nome] = { id: r.id, p }; }
   catch (e) { /* non indispensabile */ }
 }
