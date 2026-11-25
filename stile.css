@@ -338,3 +338,24 @@ i.yc{background:#F2C230}i.rc{background:#D23C3C}
 .chip{min-height:38px;padding:0 14px;border-radius:20px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);font:600 14.5px Barlow,sans-serif;cursor:pointer}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip:focus-visible{outline:3px solid var(--giallo);outline-offset:2px}
+
+/* foglio presenze da stampare (uguale al "Format presenze" del PC): esiste solo durante la stampa */
+#stampa{display:none}
+@media print{
+  @page{size:A4;margin:10mm}
+  body>*:not(#stampa){display:none!important}
+  html,body{background:#fff!important;color:#111!important}
+  #stampa{display:block;font:10.5pt/1.3 Arial,sans-serif;color:#111;width:98%;margin:0 auto}
+  #stampa header{text-align:center;margin-bottom:10px}
+  #stampa header img{height:20mm;width:auto;max-width:40mm;object-fit:contain;display:block;margin:0 auto 4px}
+  #stampa h1{margin:0;font-size:15pt;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
+  #stampa .fmt{table-layout:fixed;width:100%;border-collapse:collapse}
+  #stampa .fmt td{border:1.4px solid #222;height:var(--h,6.6mm);padding:0 4px;font-size:9pt}
+  #stampa .fmt .nome{white-space:nowrap;overflow:hidden}
+  #stampa .fmt .pa{text-align:center;font-weight:700;font-size:8pt;color:#333;padding:0}
+  #stampa .fmt td.p{border-right:.5px dashed #999}
+  #stampa .fmt td.a{border-left:.5px dashed #999}
+  #stampa .fmt .data td{height:10mm;font-weight:700}
+  #stampa .fmt .sep td{border:0;height:3mm}
+  #stampa .fmt .tot td{height:9mm;font-weight:700}
+}

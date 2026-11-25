@@ -8,7 +8,7 @@
    ============================================================ */
 "use strict";
 
-const VERSIONE = "1.7";
+const VERSIONE = "1.8";
 const CLIENT_ID = "214816832496-4aljuon9t9dpb7usqstupk0gs27utf2k.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/drive";
 const DRIVE = "https://www.googleapis.com/drive/v3";
@@ -436,7 +436,7 @@ function apriGara(g, vistaIniziale = null) {
   let vista = vistaIniziale || (nuova ? "dati" : "hub"), salvata = !nuova, filtro = "";
   const conv = new Map((E.convocati || []).map((c) => [c.id, c]));
 
-  const convocabili = () => S.D.persone.filter((p) => p.app !== "STAFF" || conv.has(p.id))
+  const convocabili = () => S.D.persone.filter((p) => (p.app !== "STAFF" || conv.has(p.id)) && (garaFR || p.app !== "FUORI_ROSA" || conv.has(p.id)))
     .sort((a, b) => REP_ORD.indexOf(a.reparto) - REP_ORD.indexOf(b.reparto) || (a.cognome + a.nome).localeCompare(b.cognome + b.nome));
   const convOrd = () => [...conv.values()].map((c) => ({ ...c, p: persona(c.id) })).filter((c) => c.p)
     .sort((a, b) => (a.n == null) - (b.n == null) || (a.n || 0) - (b.n || 0) || (a.p.cognome + a.p.nome).localeCompare(b.p.cognome + b.p.nome));
@@ -510,12 +510,15 @@ function apriGara(g, vistaIniziale = null) {
     } else if (vista === "conv") {
       corpo = `<div class="riep" id="riep"><span>${riep()}</span><span class="sp"></span>
         ${n ? `<button class="btn" id="bNessuno" style="min-height:40px">Togli tutti</button>` : ""}</div>
+      ${interFR(S.D.persone.filter((p) => p.app === "FUORI_ROSA").length)}
       <label class="campo cerca"><input type="search" id="cerca" placeholder="Cerca per cognome…" value="${esc(filtro)}"></label>
       <div id="elenco">${elenco(convocabili())}</div>`;
     } else if (vista === "form") {
-      const L = convOrd(), err = erroriFormazione();
+      const tutti = convOrd(), nFRc = tutti.filter((x) => x.p.app === "FUORI_ROSA").length, err = erroriFormazione();
+      const L = garaFR ? tutti : tutti.filter((x) => x.p.app !== "FUORI_ROSA");
       corpo = `<div class="riep"><span id="rForm"><b>${titolari()}</b> titolari (numeri 1-11) su ${n} convocati</span></div>
         <p class="avviso err" id="eForm" ${err.length ? "" : "hidden"}>${ico("avviso")}<span>${esc(err.join("; "))}</span></p>
+        ${interFR(nFRc, "convocati")}
         <p class="nota">Scrivi il numero di maglia: dall'1 all'11 sono i titolari (servono al PC per i minuti giocati). Tocca <b>C</b> per il capitano e <b>V</b> per il vice.</p>
         <div class="lista">${L.map(({ id, n: num, c, v, p }) => `<div class="rform">
           <input class="num" type="number" inputmode="numeric" min="1" max="99" data-num="${id}" value="${num ?? ""}" aria-label="Numero di ${esc(p.cognome)}">
@@ -550,6 +553,7 @@ function apriGara(g, vistaIniziale = null) {
       ${corpo}
     </section>${barra}`;
     $("bInd").onclick = () => { leggiForm(); if (vista !== "hub" && (!nuova || E.data)) { vista = "hub"; disegna(); window.scrollTo(0, 0); } else esci(); };
+    if ($("cGFR")) $("cGFR").onchange = (e) => { leggiForm(); garaFR = e.target.checked; disegna(); };
     $("bSalva").onclick = salva;
     $("bReport").onclick = () => { leggiForm(); E.convocati = [...conv.values()]; if (!E.data) { toast("Indica prima la data della gara.", true); vista = "dati"; disegna(); return; } report(E, salvata, () => { disegna(); }); };
     if (vista === "hub") app().querySelectorAll(".tile").forEach((b) => (b.onclick = () => {
@@ -1016,6 +1020,8 @@ function apriCalendario(sposta = null) {
       </div>
       <button class="btn verde lg" id="bOggi" ${pc.has(oggi) ? "disabled" : ""}>${ico("presenze")} Presenze di oggi</button>
       ${pc.has(oggi) ? `<p class="nota">Le presenze di oggi sono già sul PC: eventuali correzioni si fanno dal PC.</p>` : ""}
+      ${sposta ? "" : `<button class="btn lg" id="bFoglio" style="margin-top:10px">${ico("report")} Stampa foglio presenze</button>
+      <p class="nota">Il foglio da compilare a mano, come quello del PC: si stampa con una stampante Wi-Fi o si salva in PDF.</p>`}
     </section>`;
   const scegli = (iso) => {
     if (sposta) {
@@ -1028,6 +1034,7 @@ function apriCalendario(sposta = null) {
   $("mPrec").onclick = () => { meseCal = m === 0 ? [y - 1, 11] : [y, m - 1]; apriCalendario(); };
   $("mSucc").onclick = () => { if (ultimoMese) return; meseCal = m === 11 ? [y + 1, 0] : [y, m + 1]; apriCalendario(); };
   $("bOggi").onclick = () => scegli(oggi);
+  if ($("bFoglio")) $("bFoglio").onclick = stampaFoglioPresenze;
   app().querySelector(".calg").onclick = (e) => {
     const b = e.target.closest("[data-d]");
     if (!b) return;
@@ -1037,6 +1044,8 @@ function apriCalendario(sposta = null) {
   };
 }
 
+let garaFR = false;   // gara (convocati e formazione): fuori rosa nascosti all'apertura dell'app
+const interFR = (n, cosa = "") => n ? `<label class="interr"><input type="checkbox" id="cGFR" ${garaFR ? "checked" : ""}><span class="sw"></span> Mostra fuori rosa${cosa ? " " + cosa : ""} (${n})</label>` : "";
 let presVista = { fr: false, ord: "rep" };   // solo per questa apertura dell'app
 /** sposta = { da, sel }: presenze portate da un altro giorno (quelle del giorno "da" si tolgono all'invio) */
 function apriPresenze(data, sposta = null) {
@@ -1181,6 +1190,35 @@ async function report(E, salvata, torna) {
     catch (e) { if (e.name !== "AbortError") toast("Condivisione non riuscita: usa Scarica e invia l'immagine da WhatsApp.", true); }
   };
   window.scrollTo(0, 0);
+}
+
+/**
+ * Foglio presenze da compilare a mano (A4), uguale a "Format presenze" del PC:
+ * giocatori della rosa, 10 giorni con P/A, totale e 6 righe libere in fondo.
+ * Si usa la stampa del telefono: stampanti Wi-Fi oppure "Salva come PDF".
+ */
+function stampaFoglioPresenze() {
+  const COL = 10, LIBERE = 6;
+  const rosa = S.D.persone.filter((p) => p.app === "ROSA").sort((a, b) => (a.cognome + " " + a.nome).localeCompare(b.cognome + " " + b.nome));
+  const vuote = (cl = "") => Array.from({ length: COL }, () => `<td colspan="2" class="${cl}"></td>`).join("");
+  const pa = Array.from({ length: COL }, () => `<td class="pa p">P</td><td class="pa a">A</td>`).join("");
+  const sep = `<tr class="sep"><td colspan="${1 + COL * 2}"></td></tr>`;
+  document.getElementById("stampa")?.remove();
+  const d = document.createElement("div");
+  d.id = "stampa";
+  d.innerHTML = `<header>${S.D.logo ? `<img src="${esc(S.D.logo)}" alt="">` : ""}<h1>Presenze allenamento</h1></header>
+    <table class="fmt" style="--h:${Math.max(5, Math.min(6.6, 205 / (rosa.length + LIBERE))).toFixed(2)}mm"><colgroup><col style="width:24%">${`<col style="width:3.8%">`.repeat(COL * 2)}</colgroup>
+      <tr class="data"><td class="nome">Data</td>${vuote()}</tr>${sep}
+      ${rosa.map((p) => `<tr><td class="nome">${esc(p.cognome + " " + p.nome)}</td>${pa}</tr>`).join("")}
+      <tr class="tot"><td class="nome">Totale: ${rosa.length}</td>${vuote()}</tr>${sep}
+      ${`<tr><td class="nome"></td>${pa}</tr>`.repeat(LIBERE)}
+    </table>`;
+  document.body.appendChild(d);
+  const togli = () => { d.remove(); window.removeEventListener("afterprint", togli); };
+  window.addEventListener("afterprint", togli);
+  const img = d.querySelector("img");
+  const vai = () => { try { window.print(); } catch (e) { togli(); toast("La stampa non è disponibile su questo telefono.", true); } };
+  if (img && !img.complete) { img.onload = img.onerror = vai; } else vai();
 }
 
 function caricaImg(src) {
